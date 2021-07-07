@@ -1,0 +1,698 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/2002/REC-xhtml1-20020801/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO-8859-1" />
+  <title>Code Examples for Programming in Scala, Fifth Edition</title>
+  <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div id="mainTitles"><h3>Code Examples for</h3><h2>Programming in Scala, Fifth Edition</h2></div>  <p><a href="../index.html">
+    Return to chapter index
+  </a></p>
+  <h2>24 Collections in Depth</h2>
+
+  <p><a href="../collections-in-depth/transcript.txt">
+    Sample run of chapter's interpreter examples
+  </a></p>
+
+  <ul>
+
+    <li>24.1 <a href="#sec1">Mutable and immutable collections</a></li>
+    <li>24.2 <a href="#sec2">Collections consistency</a></li>
+    <li>24.3 <a href="#sec3">Trait <span class="mono">Iterable</span></a></li>
+    <li>24.4 <a href="#sec4">Sets</a></li>
+    <li>24.5 <a href="#sec5">Maps</a></li>
+    <li>24.6 <a href="#sec6">Concrete immutable collection classes</a></li>
+    <li>24.7 <a href="#sec7">Concrete mutable collection classes</a></li>
+    <li>24.8 <a href="#sec8">Arrays</a></li>
+    <li>24.9 <a href="#sec9">Strings</a></li>
+    <li>24.10 <a href="#sec10">Performance characteristics</a></li>
+    <li>24.11 <a href="#sec11">Equality</a></li>
+    <li>24.12 <a href="#sec12">Views</a></li>
+    <li>24.13 <a href="#sec13">Iterators</a></li>
+    <li>24.14 <a href="#sec14">Creating collections from scratch</a></li>
+    <li>24.15 <a href="#sec15">Conversions between Java and Scala collections</a></li>
+    <li>24.16 <a href="#sec16">Conclusion</a></li>
+  </ul>
+
+  <h3><a name="sec1"></a>24.1 Mutable and immutable collections</h3>
+
+  <h3><a name="sec2"></a>24.2 Collections consistency</h3>
+
+  <pre><hr>
+    Iterable("x", "y", "z")
+    Map("x" -&gt; 24, "y" -&gt; 25, "z" -&gt; 26)
+    Set(Color.Red, Color.Green, Color.Blue)
+    SortedSet("hello", "world")
+    Buffer(x, y, z)
+    IndexedSeq(1.0, 2.0)
+    LinearSeq(a, b, c)
+
+<hr>
+    List(1, 2, 3)
+    HashMap("x" -&gt; 24, "y" -&gt; 25, "z" -&gt; 26)
+
+<hr>
+  List(1, 2, 3).map(_ + 1) // List(2, 3, 4): List[Int]
+  Set(1, 2, 3).map(_ * 2)  // Set(2, 4, 6): Set[Int]
+
+<hr>
+  </pre>
+  <h3><a name="sec3"></a>24.3 Trait <span class="mono">Iterable</span></h3>
+
+  <pre><hr>
+    def iterator: Iterator[A] 
+
+<hr>
+// In file <a href="../collections-in-depth/iterater-example-1.scala">collections-in-depth/iterater-example-1.scala</a>
+
+  val xs = List(1, 2, 3, 4, 5)
+
+  val git = xs.grouped(3) // an Iterator[List[Int]]
+  git.next()              // List(1, 2, 3)
+  git.next()              // List(4, 5)
+
+  val sit = xs.sliding(3) // an Iterator[List[Int]]
+  sit.next()              // List(1, 2, 3)
+  sit.next()              // List(2, 3, 4)
+  sit.next()              // List(3, 4, 5)
+
+<hr>
+  </pre>
+  <h3><a name="sec4"></a>24.4 Sets</h3>
+
+  <pre><hr>
+// In file <a href="../collections-in-depth/set-example-1.scala">collections-in-depth/set-example-1.scala</a>
+
+  val fruit = Set("apple", "orange", "peach", "banana")
+  fruit("peach")  // true
+  fruit("potato") // false
+
+<hr>
+// In file <a href="../collections-in-depth/set-example-2.scala">collections-in-depth/set-example-2.scala</a>
+
+  var s = Set(1, 2, 3)
+  s += 4
+  s -= 2
+  s // Set(1, 3, 4)
+
+<hr>
+// In file <a href="../collections-in-depth/set-example-3.scala">collections-in-depth/set-example-3.scala</a>
+
+  val s = collection.mutable.Set(1, 2, 3)
+  s += 4 // Set(1, 2, 3, 4)
+  s -= 2 // Set(1, 3, 4)
+  s      // Set(1, 3, 4)
+
+<hr>
+  </pre>
+  <h3><a name="sec5"></a>24.5 Maps</h3>
+
+  <pre><hr>
+    def get(key): Option[Value] 
+
+<hr>
+// In file <a href="../collections-in-depth/f.scala">collections-in-depth/f.scala</a>
+
+  def f(x: String) =
+    println("taking my time.")
+    Thread.sleep(100)
+    x.reverse
+
+<hr>
+// In file <a href="../collections-in-depth/cachedF.scala">collections-in-depth/cachedF.scala</a>
+
+  val cache = collection.mutable.Map[String, String]()
+
+<hr>
+  scala&gt; def cachedF(s: String) = cache.getOrElseUpdate(s, f(s))
+<span class="output">  def cachedF(s: String): String</span>
+
+  scala&gt; cachedF("abc")
+<span class="output">  taking my time.</span>
+<span class="output">  val res16: String = cba</span>
+
+  scala&gt; cachedF("abc")
+<span class="output">  val res17: String = cba</span>
+
+<hr>
+// In file <a href="../collections-in-depth/cachedF.scala">collections-in-depth/cachedF.scala</a>
+
+  def cachedF(arg: String) =
+    cache.get(arg) match
+      case Some(result) =&gt; result
+      case None =&gt;
+        val result = f(arg)
+        cache(arg) = result
+        result
+
+<hr>
+  </pre>
+  <h3><a name="sec6"></a>24.6 Concrete immutable collection classes</h3>
+
+  <pre><hr>
+  scala&gt; val str = 1 #:: 2 #:: 3 #:: LazyList.empty
+<span class="output">  val str: scala.collection.immutable.LazyList[Int] =</span>
+<span class="output">    LazyList(&lt;not computed&gt;)</span>
+
+<hr>
+  scala&gt; def fibFrom(a: Int, b: Int): LazyList[Int] =
+       |   a #:: fibFrom(b, a + b)
+<span class="output">  def fibFrom: (a: Int, b: Int)LazyList[Int]</span>
+
+<hr>
+  scala&gt; val fibs = fibFrom(1, 1).take(7)
+<span class="output">  val fibs: scala.collection.immutable.LazyList[Int] =</span>
+<span class="output">    LazyList(&lt;not computed&gt;)</span>
+
+  scala&gt; fibs.toList
+<span class="output">  val res23: List[Int] = List(1, 1, 2, 3, 5, 8, 13)</span>
+
+<hr>
+  val vec = scala.collection.immutable.Vector.empty
+  val vec2 = vec :+ 1 :+ 2 // Vector(1, 2)
+  val vec3 = 100 +: vec2   // Vector(100, 1, 2)
+  vec3(0)                  // 100
+
+<hr>
+  val vec = Vector(1, 2, 3)
+  vec.updated(2, 4) // Vector(1, 2, 4)
+  vec               // Vector(1, 2, 3)
+
+<hr>
+  collection.immutable.IndexedSeq(1, 2, 3) // Vector(1, 2, 3)
+
+<hr>
+// In file <a href="../collections-in-depth/immutable-queues.scala">collections-in-depth/immutable-queues.scala</a>
+
+  val empty = scala.collection.immutable.Queue[Int]()
+
+<hr>
+// In file <a href="../collections-in-depth/immutable-queues.scala">collections-in-depth/immutable-queues.scala</a>
+
+  val has1 = empty.enqueue(1) // Queue(1)
+
+<hr>
+// In file <a href="../collections-in-depth/immutable-queues.scala">collections-in-depth/immutable-queues.scala</a>
+
+  val has123 = has1.enqueueAll(List(2, 3)) // Queue(1, 2, 3)
+
+<hr>
+  scala&gt; val (element, has23) = has123.dequeue
+<span class="output">  val element: Int = 1</span>
+<span class="output">  has23: scala.collection.immutable.Queue[Int] = Queue(2, 3)</span>
+
+<hr>
+// In file <a href="../collections-in-depth/range-example-1.scala">collections-in-depth/range-example-1.scala</a>
+
+  1 to 3       // Range(1, 2, 3)
+  5 to 14 by 3 // Range(5, 8, 11, 14)
+
+<hr>
+// In file <a href="../collections-in-depth/range-example-2.scala">collections-in-depth/range-example-2.scala</a>
+
+  1 until 3    // Range(1, 2)
+
+<hr>
+// In file <a href="../collections-in-depth/red-black-trees-example.scala">collections-in-depth/red-black-trees-example.scala</a>
+
+  val set = collection.immutable.TreeSet.empty[Int]
+  set + 1 + 3 + 3 // TreeSet(1, 3)
+
+<hr>
+// In file <a href="../collections-in-depth/bitset-example.scala">collections-in-depth/bitset-example.scala</a>
+
+  val bits = scala.collection.immutable.BitSet.empty
+  val moreBits = bits + 3 + 4 + 4 // BitSet(3, 4)
+  moreBits(3) // true
+  moreBits(0) // false
+
+<hr>
+  import scala.collection.immutable.VectorMap
+  val vm = VectorMap.empty[Int, String]
+  val vm1 = vm + (1 -&gt; "one")  // VectorMap(1 -&gt; one)
+  val vm2 = vm1 + (2 -&gt; "two") // VectorMap(1 -&gt; one, 2 -&gt; two)
+  vm2 == Map(2 -&gt; "two", 1 -&gt; "one") // true
+
+<hr>
+// In file <a href="../collections-in-depth/listmap-example.scala">collections-in-depth/listmap-example.scala</a>
+
+  val map = collection.immutable.ListMap(1 -&gt; "one", 2 -&gt; "two")
+  map(2) // "two"
+
+<hr>
+  </pre>
+  <h3><a name="sec7"></a>24.7 Concrete mutable collection classes</h3>
+
+  <pre><hr>
+// In file <a href="../collections-in-depth/arraybuffer-example.scala">collections-in-depth/arraybuffer-example.scala</a>
+
+  val buf = collection.mutable.ArrayBuffer.empty[Int]
+  buf += 1    // ArrayBuffer(1)
+  buf += 10   // ArrayBuffer(1, 10)
+  buf.toArray // Array(1, 10)
+
+<hr>
+// In file <a href="../collections-in-depth/listbuffer-example.scala">collections-in-depth/listbuffer-example.scala</a>
+
+  val buf = collection.mutable.ListBuffer.empty[Int]
+  buf += 1   // ListBuffer(1)
+  buf += 10  // ListBuffer(1, 10)
+  buf.toList // List(1, 10)
+
+<hr>
+  val buf = new StringBuilder
+  buf += 'a'      // a
+  buf ++= "bcdef" // abcdef
+  buf.toString    // abcdef
+
+<hr>
+// In file <a href="../collections-in-depth/queue-example-1.scala">collections-in-depth/queue-example-1.scala</a>
+
+  val queue = new scala.collection.mutable.Queue[String]
+  queue += "a"             // Queue(a)
+  queue ++= List("b", "c") // Queue(a, b, c)
+  queue                    // Queue(a, b, c)
+  queue.dequeue            // a
+  queue                    // Queue(b, c)
+
+<hr>
+// In file <a href="../collections-in-depth/queue-example-2.scala">collections-in-depth/queue-example-2.scala</a>
+
+  val stack = new scala.collection.mutable.Stack[Int]
+  stack.push(1) // Stack(1)
+  stack         // Stack(1)
+  stack.push(2) // Stack(2, 1)
+  stack         // Stack(2, 1)
+  stack.top     // 2
+  stack         // Stack(2, 1)
+  stack.pop     // 2
+  stack         // Stack(1)
+
+<hr>
+// In file <a href="../collections-in-depth/hashtable-example.scala">collections-in-depth/hashtable-example.scala</a>
+
+  val map = collection.mutable.HashMap.empty[Int,String]
+  map += (1 -&gt; "make a web site")
+                  // Map(1 -&gt; make a web site)
+  map += (3 -&gt; "profit!")
+                  // Map(1 -&gt; make a web site, 3 -&gt; profit!)
+  map(1)          // make a web site
+  map.contains(2) // false
+
+<hr>
+// In file <a href="../collections-in-depth/mutable-bitset-example.scala">collections-in-depth/mutable-bitset-example.scala</a>
+
+  val bits = scala.collection.mutable.BitSet.empty
+  bits += 1 // BitSet(1)
+  bits += 3 // BitSet(1, 3)
+  bits      // BitSet(1, 3)
+
+<hr>
+  </pre>
+  <h3><a name="sec8"></a>24.8 Arrays</h3>
+
+  <pre><hr>
+// In file <a href="../collections-in-depth/array-example-1.scala">collections-in-depth/array-example-1.scala</a>
+
+  val a1 = Array(1, 2, 3)
+  val a2 = a1.map(_ * 3)         // Array(3, 6, 9)
+  val a3 = a2.filter(_ % 2 != 0) // Array(3, 9)
+  a3.reverse                     // Array(9, 3)
+
+<hr>
+// In file <a href="../collections-in-depth/array-example-1.scala">collections-in-depth/array-example-1.scala</a>
+
+  val seq: collection.Seq[Int] = a1 // ArraySeq(1, 2, 3)
+  val a4: Array[Int] = seq.toArray  // Array(1, 2, 3)
+  a1 eq a4 // false
+
+<hr>
+// In file <a href="../collections-in-depth/array-example-2.scala">collections-in-depth/array-example-2.scala</a>
+
+  val seq: collection.Seq[Int] = a1 // ArraySeq(1, 2, 3)
+  seq.reverse // ArraySeq(3, 2, 1)
+  val ops: collection.ArrayOps[Int] = a1 // Array(1, 2, 3)
+  ops.reverse // Array(3, 2, 1)
+
+<hr>
+// In file <a href="../collections-in-depth/array-example-3.scala">collections-in-depth/array-example-3.scala</a>
+
+  a1.reverse // Array(3, 2, 1)
+
+<hr>
+// In file <a href="../collections-in-depth/array-example-3.scala">collections-in-depth/array-example-3.scala</a>
+
+  intArrayOps(a1).reverse // Array(3, 2, 1)
+
+<hr>
+  // This is wrong!
+  def evenElems[T](xs: Vector[T]): Array[T] =
+    val arr = new Array[T]((xs.length + 1) / 2)
+    for i &lt;- 0 until xs.length by 2 do
+      arr(i / 2) = xs(i)
+    arr
+
+<hr>
+<span class="output"> 2 |    val arr = new Array[T]((xs.length + 1) / 2)</span>
+<span class="output">   |                                               ^</span>
+<span class="output">   |                            No ClassTag available for T</span>
+
+<hr>
+// In file <a href="../collections-in-depth/evenElems.scala">collections-in-depth/evenElems.scala</a>
+
+  // This works
+  import scala.reflect.ClassTag
+  def evenElems[T: ClassTag](xs: Vector[T]): Array[T] =
+    val arr = new Array[T]((xs.length + 1) / 2)
+    for i &lt;- 0 until xs.length by 2 do
+      arr(i / 2) = xs(i)
+    arr
+
+<hr>
+// In file <a href="../collections-in-depth/evenElems.scala">collections-in-depth/evenElems.scala</a>
+
+  evenElems(Vector(1, 2, 3, 4, 5)) // Array(1, 3, 5)
+  evenElems(Vector("this", "is", "a", "test", "run"))
+    // Array(this, a, run)
+
+<hr>
+  scala&gt; def wrap[U](xs: Vector[U]) = evenElems(xs)
+<span class="output"> 1 |def wrap[U](xs: Vector[U]) = evenElems(xs)</span>
+<span class="output">   |                                          ^</span>
+<span class="output">   |                        No ClassTag available for U</span>
+
+<hr>
+// In file <a href="../collections-in-depth/evenElems.scala">collections-in-depth/evenElems.scala</a>
+
+  def wrap[U: ClassTag](xs: Vector[U]) = evenElems(xs)
+
+<hr>
+  </pre>
+  <h3><a name="sec9"></a>24.9 Strings</h3>
+
+  <pre><hr>
+// In file <a href="../collections-in-depth/string-example.scala">collections-in-depth/string-example.scala</a>
+
+  val str = "hello"
+  str.reverse            // olleh
+  str.map(_.toUpper)     // HELLO
+  str.drop(3)            // lo
+  str.slice(1, 4)        // ell
+  val s: Seq[Char] = str // hello
+
+<hr>
+  </pre>
+  <h3><a name="sec10"></a>24.10 Performance characteristics</h3>
+
+  <h3><a name="sec11"></a>24.11 Equality</h3>
+
+  <pre><hr>
+// In file <a href="../collections-in-depth/equality-example.scala">collections-in-depth/equality-example.scala</a>
+
+  import collection.mutable.{HashMap, ArrayBuffer}
+  val buf = ArrayBuffer(1, 2, 3)
+  val map = HashMap(buf -&gt; 3) // Map((ArrayBuffer(1, 2, 3),3))
+  map(buf) // 3
+  buf(0) += 1
+  map(buf)
+    // java.util.NoSuchElementException: key not found:
+    //   ArrayBuffer(2, 2, 3)
+
+<hr>
+  </pre>
+  <h3><a name="sec12"></a>24.12 Views</h3>
+
+  <pre><hr>
+// In file <a href="../collections-in-depth/lazymap.scala">collections-in-depth/lazymap.scala</a>
+
+  def lazyMap[T, U](col: Iterable[T], f: T =&gt; U) =
+    new Iterable[U]:
+      def iterator = col.iterator.map(f)
+
+<hr>
+// In file <a href="../collections-in-depth/view-example.scala">collections-in-depth/view-example.scala</a>
+
+  val v = Vector((1 to 10)*)
+    // Vector(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+  v.map(_ + 1).map(_ * 2)
+    // Vector(4, 6, 8, 10, 12, 14, 16, 18, 20, 22)
+
+<hr>
+// In file <a href="../collections-in-depth/view-example.scala">collections-in-depth/view-example.scala</a>
+
+  (v.view.map(_ + 1).map(_ * 2)).toVector
+    // Vector(4, 6, 8, 10, 12, 14, 16, 18, 20, 22)
+
+<hr>
+  scala&gt; val vv = v.view
+<span class="output">  val vv: scala.collection.IndexedSeqView[Int] =</span>
+<span class="output">    IndexedSeqView(&lt;not computed&gt;)</span>
+
+<hr>
+  scala&gt; vv.map(_ + 1)
+<span class="output">  val res13: scala.collection.IndexedSeqView[Int] =</span>
+<span class="output">    IndexedSeqView(&lt;not computed&gt;)</span>
+
+<hr>
+  scala&gt; res13.map(_ * 2)
+<span class="output">  val res14: scala.collection.IndexedSeqView[Int] =</span>
+<span class="output">    IndexedSeqView(&lt;not computed&gt;)</span>
+
+<hr>
+  scala&gt; res14.toVector
+<span class="output">  val res15: Seq[Int] =</span>
+<span class="output">         Vector(4, 6, 8, 10, 12, 14, 16, 18, 20, 22)</span>
+
+<hr>
+// In file <a href="../collections-in-depth/palindrome.scala">collections-in-depth/palindrome.scala</a>
+
+  def isPalindrome(x: String) = x == x.reverse
+  def findPalindrome(s: Iterable[String]) = s.find(isPalindrome)
+
+<hr>
+// In file <a href="../collections-in-depth/palindrome.scala">collections-in-depth/palindrome.scala</a>
+
+  findPalindrome(words.take(1000000))
+
+<hr>
+// In file <a href="../collections-in-depth/palindrome.scala">collections-in-depth/palindrome.scala</a>
+
+  findPalindrome(words.view.take(1000000))
+
+<hr>
+// In file <a href="../collections-in-depth/actor-example-1.scala">collections-in-depth/actor-example-1.scala</a>
+
+  val actors = for i &lt;- 1 to 10 yield actor { ??? }
+
+<hr>
+// In file <a href="../collections-in-depth/actor-example-2.scala">collections-in-depth/actor-example-2.scala</a>
+
+  val actors = (1 to 10).map(i =&gt; actor { ??? })
+
+<hr>
+// In file <a href="../collections-in-depth/actor-example-3.scala">collections-in-depth/actor-example-3.scala</a>
+
+  val actors = for i &lt;- (1 to 10).view yield actor { ??? }
+
+<hr>
+  </pre>
+  <h3><a name="sec13"></a>24.13 Iterators</h3>
+
+  <pre><hr>
+// In file <a href="../collections-in-depth/iterator-example-2.scala">collections-in-depth/iterator-example-2.scala</a>
+
+  while it.hasNext do 
+    println(it.next())
+
+<hr>
+// In file <a href="../collections-in-depth/iterator-example-2.scala">collections-in-depth/iterator-example-2.scala</a>
+
+  it.foreach(println)
+
+<hr>
+// In file <a href="../collections-in-depth/iterator-example-2.scala">collections-in-depth/iterator-example-2.scala</a>
+
+  for elem &lt;- it do println(elem)
+
+<hr>
+// In file <a href="../collections-in-depth/iterator-example-3.scala">collections-in-depth/iterator-example-3.scala</a>
+
+  val it = Iterator("a", "number", "of", "words")
+  val lit = it.map(_.length)
+  it.hasNext // true
+  lit.foreach(println) // prints 1, 6, 2, 5
+  it.hasNext // false
+
+<hr>
+// In file <a href="../collections-in-depth/iterator-example-4.scala">collections-in-depth/iterator-example-4.scala</a>
+
+  val it = Iterator("a", "number", "of", "words")
+  val dit = it.dropWhile(_.length &lt; 2)
+  dit.next() // number
+  it.next()  // of
+
+<hr>
+// In file <a href="../collections-in-depth/iterator-example-5.scala">collections-in-depth/iterator-example-5.scala</a>
+
+  val (it1, it2) = it.duplicate
+
+<hr>
+  // This won't work
+  def skipEmptyWordsNOT(it: Iterator[String]) =
+    while it.next().isEmpty do {}
+
+<hr>
+// In file <a href="../collections-in-depth/skipEmptyWords.scala">collections-in-depth/skipEmptyWords.scala</a>
+
+  def skipEmptyWords(it: BufferedIterator[String]) =
+    while it.head.isEmpty do it.next()
+
+<hr>
+// In file <a href="../collections-in-depth/iterator-buffered.scala">collections-in-depth/iterator-buffered.scala</a>
+
+  val it = Iterator(1, 2, 3, 4)
+  val bit = it.buffered
+  bit.head   // 1
+  bit.next() // 1
+  bit.next() // 2
+
+<hr>
+  </pre>
+  <h3><a name="sec14"></a>24.14 Creating collections from scratch</h3>
+
+  <pre><hr>
+// In file <a href="../collections-in-depth/collection-from-scratch.scala">collections-in-depth/collection-from-scratch.scala</a>
+
+    Iterable()              // An empty collection
+    List()                  // The empty list
+    List(1.0, 2.0)          // A list with elements 1.0, 2.0
+    Vector(1.0, 2.0)        // A vector with elements 1.0, 2.0
+    Iterator(1, 2, 3)       // An iterator returning three integers.
+    Set(dog, cat, bird)     // A set of three animals
+    HashSet(dog, cat, bird) // A hash set of the same animals
+    Map('a' -&gt; 7, 'b' -&gt; 0) // A map from characters to integers
+
+<hr>
+// In file <a href="../collections-in-depth/list-apply.scala">collections-in-depth/list-apply.scala</a>
+
+  List.apply(1.0, 2.0)
+
+<hr>
+  scala&gt; List(1, 2, 3)
+<span class="output">  val res17: List[Int] = List(1, 2, 3)</span>
+
+  scala&gt; Iterable(1, 2, 3)
+<span class="output">  val res18: Iterable[Int] = List(1, 2, 3)</span>
+
+  scala&gt; mutable.Iterable(1, 2, 3)
+<span class="output">  val res19: scala.collection.mutable.Iterable[Int] =</span>
+<span class="output">    ArrayBuffer(1, 2, 3)</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec15"></a>24.15 Conversions between Java and Scala collections</h3>
+
+  <pre><hr>
+  Iterator         <em>\Leftrightarrow</em>    java.util.Iterator
+  Iterator         <em>\Leftrightarrow</em>    java.util.Enumeration
+  Iterable         <em>\Leftrightarrow</em>    java.lang.Iterable
+  Iterable         <em>\Leftrightarrow</em>    java.util.Collection
+  mutable.Buffer   <em>\Leftrightarrow</em>    java.util.List
+  mutable.Set      <em>\Leftrightarrow</em>    java.util.Set
+  mutable.Map      <em>\Leftrightarrow</em>    java.util.Map
+
+<hr>
+  scala&gt; import jdk.CollectionConverters.*
+
+<hr>
+  scala&gt; import collection.mutable.*
+
+  scala&gt; val jul: java.util.List[Int] = ArrayBuffer(1, 2, 3).asJava
+<span class="output">  val jul: java.util.List[Int] = [1, 2, 3]</span>
+
+  scala&gt; val buf: Seq[Int] = jul.asScala
+<span class="output">  val buf: scala.collection.mutable.Seq[Int] = ArrayBuffer(1, 2, 3)</span>
+
+  scala&gt; val m: java.util.Map[String, Int] =
+            HashMap("abc" -&gt; 1, "hello" -&gt; 2).asJava
+<span class="output">  m: java.util.Map[String,Int] = {hello=2, abc=1}</span>
+
+<hr>
+   Seq          <em>\Rightarrow</em>   java.util.List 
+   mutable.Seq  <em>\Rightarrow</em>   java.util.List
+   Set          <em>\Rightarrow</em>   java.util.Set 
+   Map          <em>\Rightarrow</em>   java.util.Map 
+
+<hr>
+  scala&gt; val jul: java.util.List[Int] = List(1, 2, 3)
+<span class="output">  val jul: java.util.List[Int] = [1, 2, 3]</span>
+
+  scala&gt; jul.add(7)
+<span class="output">  java.lang.UnsupportedOperationException</span>
+<span class="output">          at java.util.AbstractList.add(AbstractList.java:131)</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec16"></a>24.16 Conclusion</h3>
+
+
+ <table>
+ <tr valign="top">
+ <td>
+ <div id="moreinfo">
+ <p>
+ For more information about <em>Programming in Scala, Fifth Edition</em> (the "Stairway Book"), please visit:
+ </p>
+ 
+ <p>
+ <a href="http://www.artima.com/shop/programming_in_scala_5ed">http://www.artima.com/shop/programming_in_scala_5ed</a>
+ </p>
+ 
+ <p>
+ and:
+ </p>
+ 
+ <p>
+ <a href="http://booksites.artima.com/programming_in_scala_5ed">http://booksites.artima.com/programming_in_scala_5ed</a>
+ </p>
+ </div>
+ </td>
+ <td>
+ <div id="license">
+ <p>
+   Copyright &copy; 2007-2020 Artima, Inc. All rights reserved.
+ </p>
+
+ <p>
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ </p>
+
+ <p style="margin-left: 20px">
+   <a href="http://www.apache.org/licenses/LICENSE-2.0">
+     http://www.apache.org/licenses/LICENSE-2.0
+   </a>
+ </p>
+
+ <p>
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ </p>
+ </div>
+ </td>
+ </tr>
+ </table>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+/*
+ * Copyright (C) 2007-2020 Artima, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Automatically generated Scala interpreter transcript from:
+ *
+ * Programming in Scala (Fifth Edition)
+ * by Martin Odersky, Lex Spoon, Bill Venners, and Frank Sommers
+ *
+ * http://booksites.artima.com/programming_in_scala_5ed
+ */
+
+
+scala> Greeter.greet("Jill")
+       ^
+       error: not found: value Greeter
+
+scala> import JillsPrefs.prompt
+              ^
+       error: not found: value JillsPrefs
+
+scala> Greeter.greet("Jill")
+       ^
+       error: not found: value Greeter
+
+scala> Greeter.greet("Jill")(JillsPrefs.prompt)
+       ^
+       error: not found: value Greeter
+                             ^
+       error: not found: value JillsPrefs
+
+scala> Greeter.greet("Jill")(using JillsPrefs.prompt)
+                                             ^
+       error: ')' expected but '.' found.
+
+scala> Greeter.greet("Joe")
+       ^
+       error: not found: value Greeter
+
+scala> Greeter.greet("Joe")(using prompt, drink)
+       ^
+       error: not found: value Greeter
+                            ^
+       error: not found: value using
+                                          ^
+       error: not found: value drink
+                                  ^
+       error: postfix operator prompt needs to be enabled
+       by making the implicit value scala.language.postfixOps visible.
+       This can be achieved by adding the import clause 'import scala.language.postfixOps'
+       or by setting the compiler option -language:postfixOps.
+       See the Scaladoc for value scala.language.postfixOps for a discussion
+       why the feature needs to be explicitly enabled.
+
+scala> Greeter.greet("Joe")
+       ^
+       error: not found: value Greeter
+
+scala>   class PreferredPrompt(val preference: String)
+         class PreferredDrink(val preference: String)
+       
+         object Greeter:
+           def greet(name: String)(using prompt: PreferredPrompt,
+               drink: PreferredDrink) =
+       
+             println(s"Welcome, $name. The system is ready.")
+             print("But while you work, ")
+             println(s"why not enjoy a cup of ${drink.preference}?")
+             println(prompt.preference)
+       
+         object JoesPrefs:
+           given prompt: PreferredPrompt =
+             PreferredPrompt("relax> ")
+           given drink: PreferredDrink =
+             PreferredDrink("tea")
+
+                object Greeter:
+                              ^
+On line 4: error: ';' expected but ':' found.
+                object JoesPrefs:
+                                ^
+On line 13: error: ';' expected but ':' found.
+                  given drink: PreferredDrink =
+                                              ^
+On line 16: error: ';' expected but '=' found.
+
+scala> import JillsPrefs.jillsPrompt
+              ^
+       error: not found: value JillsPrefs
+
+scala> Greeter.greet("Who's there?")
+       ^
+       error: not found: value Greeter
+

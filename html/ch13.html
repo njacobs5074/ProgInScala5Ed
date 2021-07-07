@@ -1,0 +1,736 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/2002/REC-xhtml1-20020801/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO-8859-1" />
+  <title>Code Examples for Programming in Scala, Fifth Edition</title>
+  <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div id="mainTitles"><h3>Code Examples for</h3><h2>Programming in Scala, Fifth Edition</h2></div>  <p><a href="../index.html">
+    Return to chapter index
+  </a></p>
+  <h2>13 Pattern Matching</h2>
+
+  <p><a href="../pattern-matching/transcript.txt">
+    Sample run of chapter's interpreter examples
+  </a></p>
+
+  <ul>
+
+    <li>13.1 <a href="#sec1">A simple example</a></li>
+    <li>13.2 <a href="#sec2">Kinds of patterns</a></li>
+    <li>13.3 <a href="#sec3">Pattern guards</a></li>
+    <li>13.4 <a href="#sec4">Pattern overlaps</a></li>
+    <li>13.5 <a href="#sec5">Sealed classes</a></li>
+    <li>13.6 <a href="#sec6">Pattern matching <span class="mono">Option</span>s</a></li>
+    <li>13.7 <a href="#sec7">Patterns everywhere</a></li>
+    <li>13.8 <a href="#sec8">A larger example</a></li>
+    <li>13.9 <a href="#sec9">Conclusion</a></li>
+  </ul>
+
+  <h3><a name="sec1"></a>13.1 A simple example</h3>
+
+  <pre><hr>
+  trait Expr
+  case class Var(name: String) extends Expr
+  case class Num(number: Double) extends Expr
+  case class UnOp(operator: String, arg: Expr) extends Expr
+  case class BinOp(operator: String, 
+      left: Expr, right: Expr) extends Expr
+
+<hr>
+  val v = Var("x")
+
+<hr>
+  val op = BinOp("+", Num(1), v)
+
+<hr>
+  v.name    // x
+  op.left   // Num(1.0)
+
+<hr>
+  op.toString            // BinOp(+,Num(1.0),Var(x))
+  op.right == Var("x")   // true
+
+<hr>
+  op.copy(operator = "-")   // BinOp(-,Num(1.0),Var(x))
+
+<hr>
+  UnOp("-", UnOp("-", <em>e</em>))  =&gt; <em>e</em>   // Double negation
+  BinOp("+", <em>e</em>, Num(0)) =&gt; <em>e</em>   // Adding zero
+  BinOp("*", <em>e</em>, Num(1)) =&gt; <em>e</em>   // Multiplying by one
+
+<hr>
+  simplifyTop(UnOp("-", UnOp("-", Var("x"))))   // Var(x)
+
+<hr>
+  def simplifyTop(expr: Expr): Expr =
+    expr match
+      case UnOp("-", UnOp("-", e))  =&gt; e // Double negation
+      case BinOp("+", e, Num(0)) =&gt; e // Adding zero
+      case BinOp("*", e, Num(1)) =&gt; e // Multiplying by one
+      case _ =&gt; expr
+
+<hr>
+  <em>selector</em> match { <em>alternatives</em> }
+
+<hr>
+  switch (<em>selector</em>) { <em>alternatives</em> }
+
+<hr>
+  UnOp("-", UnOp("-", e))
+
+<hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  expr match
+    case BinOp(op, left, right) =&gt;
+      println(s"$expr is a binary operation")
+    case _ =&gt;
+
+<hr>
+  </pre>
+  <h3><a name="sec2"></a>13.2 Kinds of patterns</h3>
+
+  <pre><hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  expr match
+    case BinOp(op, left, right) =&gt;
+      s"$expr is a binary operation"
+    case _ =&gt; // handle the default case
+      s"It's something else"
+
+<hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  expr match
+    case BinOp(_, _, _) =&gt; s"$expr is a binary operation"
+    case _ =&gt; "It's something else"
+
+<hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  def describe(x: Any) =
+    x match
+      case 5 =&gt; "five"
+      case true =&gt; "truth"
+      case "hello" =&gt; "hi!"
+      case Nil =&gt; "the empty list"
+      case _ =&gt; "something else"
+
+<hr>
+  describe(5)             // five
+  describe(true)          // truth
+  describe("hello")       // hi!
+  describe(Nil)           // the empty list
+  describe(List(1,2,3))   // something else
+
+<hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  expr match
+    case 0 =&gt; "zero"
+    case somethingElse =&gt; s"not zero $somethingElse"
+
+<hr>
+  scala&gt; import math.{E, Pi}
+<span class="output">  import math.{E, Pi}</span>
+
+  scala&gt; E match
+       |   case Pi =&gt; s"strange math? Pi = $Pi"
+       |   case _ =&gt; "OK"
+       |
+<span class="output">  val res0: String = OK</span>
+
+<hr>
+  scala&gt; val pi = math.Pi
+<span class="output">  pi: Double = 3.141592653589793</span>
+
+  scala&gt; E match
+       |   case pi =&gt; s"strange math? Pi = $pi"
+       |
+<span class="output">  val res1: String = strange math? Pi = 2.718281828459045</span>
+
+<hr>
+  scala&gt; E match
+       |   case pi =&gt; s"strange math? Pi = $pi"
+       |   case _ =&gt; "OK"  
+       |
+<span class="output"> val res2: String = strange math? Pi = 2.718281828459045</span>
+<span class="output"> 3 |                case _ =&gt; "OK"</span>
+<span class="output">   |                     ^</span>
+<span class="output">   |                     Unreachable case</span>
+
+<hr>
+  scala&gt; E match
+       |   case `pi` =&gt; s"strange math? Pi = $pi"
+       |   case _ =&gt; "OK"
+       |
+<span class="output">  res4: String = OK</span>
+
+<hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  expr match
+    case BinOp("+", e, Num(0)) =&gt; "a deep match"
+    case _ =&gt; ""
+
+<hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  xs match
+    case List(0, _, _) =&gt; "found it"
+    case _ =&gt; ""
+
+<hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  xs match
+    case List(0, _*) =&gt; "found it"
+    case _ =&gt; ""
+
+<hr>
+  def tupleDemo(obj: Any) =
+    obj match
+      case (a, b, c) =&gt; s"matched <em>a</em>b$c"
+      case _ =&gt; ""
+
+<hr>
+  tupleDemo(("a ", 3, "-tuple"))   // matched a 3-tuple
+
+<hr>
+  def generalSize(x: Any) =
+    x match
+      case s: String =&gt; s.length
+      case m: Map[_, _] =&gt; m.size
+      case _ =&gt; -1
+
+<hr>
+  generalSize("abc")                     // 3
+  generalSize(Map(1 -&gt; 'a', 2 -&gt; 'b'))   // 2
+  generalSize(math.Pi)                   // -1
+
+<hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  expr.isInstanceOf[String]
+
+<hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  expr.asInstanceOf[String]
+
+<hr>
+  if x.isInstanceOf[String] then
+    val s = x.asInstanceOf[String]
+    s.length
+  else ...
+
+<hr>
+  3.asInstanceOf[String]
+  // java.lang.ClassCastException: java.lang.Integer
+  //     cannot be cast to java.lang.String
+
+<hr>
+  scala&gt; 3: String // ': String' is the type ascription
+<span class="output">  1 |3: String</span>
+<span class="output">    |^</span>
+<span class="output">    |Found:    (3 : Int)</span>
+<span class="output">    |Required: String</span>
+
+<hr>
+  scala&gt; Var("x"): Expr // Expr is a supertype of Var
+<span class="output">  val res0: Expr = Var(x)</span>
+
+<hr>
+  scala&gt; 3: Long
+<span class="output">  val res1: Long = 3</span>
+
+<hr>
+  scala&gt; def isIntIntMap(x: Any) =
+       |   x match
+       |     case m: Map[Int, Int] =&gt; true
+       |     case _ =&gt; false
+       | 
+<span class="output">  def isIntIntMap(x: Any): Boolean</span>
+<span class="output">  3 |    case m: Map[Int, Int] =&gt; true</span>
+<span class="output">    |         ^^^^^^^^^^^^^^^^</span>
+<span class="output">    |         the type test for Map[Int, Int] cannot be</span>
+<span class="output">    |         checked at runtime</span>
+
+<hr>
+  isIntIntMap(Map(1 -&gt; 1))           // true
+  isIntIntMap(Map("abc" -&gt; "abc"))   // true
+
+<hr>
+  def isStringArray(x: Any) =
+     x match
+       case a: Array[String] =&gt; "yes"
+       case _ =&gt; "no"
+   
+  isStringArray(Array("abc"))     // yes
+  isStringArray(Array(1, 2, 3))   // no
+
+<hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  expr match
+    case UnOp("abs", e @ UnOp("abs", _)) =&gt; e
+    case _ =&gt;
+
+<hr>
+  </pre>
+  <h3><a name="sec3"></a>13.3 Pattern guards</h3>
+
+  <pre><hr>
+  BinOp("+", Var("x"), Var("x"))
+
+<hr>
+  BinOp("*", Var("x"), Num(2))
+
+<hr>
+  scala&gt; def simplifyAdd(e: Expr) =
+       |   e match
+       |     case BinOp("+", x, x) =&gt; BinOp("*", x, Num(2))
+       |     case _ =&gt; e
+       | 
+<span class="output">  3 |    case BinOp("+", x, x) =&gt; BinOp("*", x, Num(2))</span>
+<span class="output">    |                       ^</span>
+<span class="output">    |                       duplicate pattern variable: x</span>
+
+<hr>
+  def simplifyAdd(e: Expr) =
+    e match
+      case BinOp("+", x, y) if x == y =&gt;
+        BinOp("*", x, Num(2))
+      case _ =&gt; e
+
+<hr>
+  // match only positive integers
+  case n: Int if 0 &lt; n =&gt; ...  
+
+  // match only strings starting with the letter `a'
+  case s: String if s(0) == 'a' =&gt; ... 
+
+<hr>
+  </pre>
+  <h3><a name="sec4"></a>13.4 Pattern overlaps</h3>
+
+  <pre><hr>
+  def simplifyAll(expr: Expr): Expr =
+    expr match
+      case UnOp("-", UnOp("-", e)) =&gt;
+        simplifyAll(e)   // `-' is its own inverse
+      case BinOp("+", e, Num(0)) =&gt;
+        simplifyAll(e)   // `0' is a neutral element for `+'
+      case BinOp("*", e, Num(1)) =&gt;
+        simplifyAll(e)   // `1' is a neutral element for `*'
+      case UnOp(op, e) =&gt; 
+        UnOp(op, simplifyAll(e))
+      case BinOp(op, l, r) =&gt;
+        BinOp(op, simplifyAll(l), simplifyAll(r))
+      case _ =&gt; expr
+
+<hr>
+  scala&gt; def simplifyBad(expr: Expr): Expr =                                      
+       |   expr match
+       |     case UnOp(op, e) =&gt; UnOp(op, simplifyBad(e))
+       |     case UnOp("-", UnOp("-", e)) =&gt; e
+       |     case _ =&gt; expr
+       | 
+<span class="output">  def simplifyBad(expr: Expr): Expr</span>
+<span class="output">  4 |    case UnOp("-", UnOp("-", e)) =&gt; e</span>
+<span class="output">    |         ^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="output">    |         Unreachable case</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec5"></a>13.5 Sealed classes</h3>
+
+  <pre><hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  sealed trait Expr
+  case class Var(name: String) extends Expr
+  case class Num(number: Double) extends Expr
+  case class UnOp(operator: String, arg: Expr) extends Expr
+  case class BinOp(operator: String, 
+      left: Expr, right: Expr) extends Expr
+
+<hr>
+  def describe(e: Expr): String = 
+    e match
+      case Num(_) =&gt; "a number"
+      case Var(_) =&gt; "a variable"
+
+<hr>
+<span class="output">  def describe(e: Expr): String</span>
+<span class="output">  2 |  e match</span>
+<span class="output">    |  ^</span>
+<span class="output">    |  match may not be exhaustive.</span>
+<span class="output">    |</span>
+<span class="output">    |  It would fail on pattern case: UnOp(_, _),</span>
+<span class="output">    |  BinOp(_, _, _)</span>
+
+<hr>
+  def describe(e: Expr): String =
+    e match
+      case Num(_) =&gt; "a number"
+      case Var(_) =&gt; "a variable"
+      case _ =&gt; throw new RuntimeException // Should not happen
+
+<hr>
+// In file <a href="../pattern-matching/Misc.scala">pattern-matching/Misc.scala</a>
+
+  def describe(e: Expr): String =
+    (e: @unchecked) match
+      case Num(_) =&gt; "a number"
+      case Var(_)    =&gt; "a variable"
+
+<hr>
+  </pre>
+  <h3><a name="sec6"></a>13.6 Pattern matching <span class="mono">Option</span>s</h3>
+
+  <pre><hr>
+  val capitals = Map("France" -&gt; "Paris", "Japan" -&gt; "Tokyo")
+  capitals.get("France")       // Some(Paris)
+  capitals.get("North Pole")   // None
+
+<hr>
+  def show(x: Option[String]) =
+    x match
+       case Some(s) =&gt; s
+       case None =&gt; "?"
+
+  show(capitals.get("Japan"))        // Tokyo
+  show(capitals.get("France"))       // Paris
+  show(capitals.get("North Pole"))   // ?
+
+<hr>
+  </pre>
+  <h3><a name="sec7"></a>13.7 Patterns everywhere</h3>
+
+  <pre><hr>
+  scala&gt; val myTuple = (123, "abc")
+<span class="output">  val myTuple: (Int, String) = (123,abc)</span>
+
+  scala&gt; val (number, string) = myTuple
+<span class="output">  val number: Int = 123</span>
+<span class="output">  val string: String = abc</span>
+
+<hr>
+  scala&gt; val exp = new BinOp("*", Num(5), Num(1))
+<span class="output">  val exp: BinOp = BinOp(*,Num(5.0),Num(1.0))</span>
+
+  scala&gt; val BinOp(op, left, right) = exp
+<span class="output">  val op: String = *</span>
+<span class="output">  val left: Expr = Num(5.0)</span>
+<span class="output">  val right: Expr = Num(1.0)</span>
+
+<hr>
+  val withDefault: Option[Int] =&gt; Int =
+    case Some(x) =&gt; x
+    case None =&gt; 0
+
+<hr>
+  withDefault(Some(10))   // 10
+  withDefault(None)       // 0
+
+<hr>
+    var sum = 0
+
+    def receive =
+
+      case Data(byte) =&gt;
+        sum += byte
+
+      case GetChecksum(requester) =&gt;
+        val checksum = ~(sum &amp; 0xFF) + 1
+        requester ! checksum
+
+<hr>
+  val second: List[Int] =&gt; Int =
+    case x :: y :: _ =&gt; y
+
+<hr>
+<span class="output">  2 |    case x :: y :: _ =&gt; y</span>
+<span class="output">    |    ^</span>
+<span class="output">    |    match may not be exhaustive.</span>
+<span class="output">    |</span>
+<span class="output">    |    It would fail on pattern case: List(_), Nil</span>
+
+<hr>
+  scala&gt; second(List(5, 6, 7))
+<span class="output">  val res24: Int = 6</span>
+
+  scala&gt; second(List())
+<span class="output">  scala.MatchError: List() (of class Nil$)</span>
+<span class="output">       at rs$line$10$.$init$$$anonfun$1(rs$line$10:2)</span>
+<span class="output">       at rs$line$12$.&lt;init&gt;(rs$line$12:1)</span>
+
+<hr>
+  val second: PartialFunction[List[Int],Int] =
+    case x :: y :: _ =&gt; y
+
+<hr>
+  second.isDefinedAt(List(5,6,7))   // true
+  second.isDefinedAt(List())        // false
+
+<hr>
+  new PartialFunction[List[Int], Int]:
+
+    def apply(xs: List[Int]) =
+      xs match
+        case x :: y :: _ =&gt; y
+
+    def isDefinedAt(xs: List[Int]) =
+      xs match
+        case x :: y :: _ =&gt; true
+        case _ =&gt; false
+
+<hr>
+  for (country, city) &lt;- capitals yield
+    s"The capital of <em>country is </em>city"
+  //
+  // List(The capital of France is Paris,
+  //   The capital of Japan is Tokyo)
+
+<hr>
+  val results = List(Some("apple"), None, Some("orange"))
+
+  for Some(fruit) &lt;- results yield fruit
+  // List(apple, orange)
+
+<hr>
+  </pre>
+  <h3><a name="sec8"></a>13.8 A larger example</h3>
+
+  <pre><hr>
+  BinOp("+", 
+        BinOp("*", 
+              BinOp("+", Var("x"), Var("y")), 
+              Var("z")), 
+        Num(1))
+
+<hr>
+  Map(
+    "|" -&gt; 0, "||" -&gt; 0,
+    "&amp;" -&gt; 1, "&amp;&amp;" -&gt; 1, ...
+  )
+
+<hr>
+// In file <a href="../pattern-matching/ExprFormatter.scala">pattern-matching/ExprFormatter.scala</a>
+
+  package org.stairwaybook.expr
+  import org.stairwaybook.layout.Element.elem
+
+  sealed abstract class Expr
+  case class Var(name: String) extends Expr
+  case class Num(number: Double) extends Expr
+  case class UnOp(operator: String, arg: Expr) extends Expr
+  case class BinOp(operator: String, 
+      left: Expr, right: Expr) extends Expr
+
+  class ExprFormatter:
+
+    // Contains operators in groups of increasing precedence
+    private val opGroups =
+      Vector(
+        Set("|", "||"),
+        Set("&amp;", "&amp;&amp;"),
+        Set("^"),
+        Set("==", "!="),
+        Set("&lt;", "&lt;=", "&gt;", "&gt;="),
+        Set("+", "-"),
+        Set("*", "%")
+      )
+
+    // A mapping from operators to their precedence
+    private val precedence = {
+      val assocs =
+        for
+          i &lt;- 0 until opGroups.length
+          op &lt;- opGroups(i)
+        yield op -&gt; i
+      assocs.toMap
+    }
+
+    private val unaryPrecedence = opGroups.length
+    private val fractionPrecedence = -1
+
+    // continued in Listing 13.21...
+
+<hr>
+// In file <a href="../pattern-matching/ExprFormatter.scala">pattern-matching/ExprFormatter.scala</a>
+
+    // ...continued from Listing 13.20
+
+    import org.stairwaybook.layout.Element
+
+    private def format(e: Expr, enclPrec: Int): Element =
+
+      e match
+
+        case Var(name) =&gt;
+          elem(name)
+
+        case Num(number) =&gt;
+          def stripDot(s: String) = 
+            if s endsWith ".0" then s.substring(0, s.length - 2)
+            else s
+          elem(stripDot(number.toString))
+
+        case UnOp(op, arg) =&gt;
+          elem(op) beside format(arg, unaryPrecedence)
+
+        case BinOp("/", left, right) =&gt;
+          val top = format(left, fractionPrecedence)
+          val bot = format(right, fractionPrecedence)
+          val line = elem('-', top.width.max(bot.width), 1)
+          val frac = top above line above bot
+          if enclPrec != fractionPrecedence then frac
+          else elem(" ") beside frac beside elem(" ")
+
+        case BinOp(op, left, right) =&gt; 
+          val opPrec = precedence(op)
+          val l = format(left, opPrec) 
+          val r = format(right, opPrec + 1)
+          val oper = l beside elem(" " + op + " ") beside r 
+          if enclPrec &lt;= opPrec then oper
+          else elem("(") beside oper beside elem(")")
+
+      end match
+
+    def format(e: Expr): Element = format(e, 0)
+
+  end ExprFormatter
+
+<hr>
+  case Var(name) =&gt; 
+    elem(name)
+
+<hr>
+      case Num(number) =&gt;
+        def stripDot(s: String) = 
+          if s endsWith ".0" then s.substring(0, s.length - 2)
+          else s
+        elem(stripDot(number.toString))
+
+<hr>
+      case UnOp(op, arg) =&gt; 
+        elem(op) beside format(arg, unaryPrecedence)
+
+<hr>
+      case BinOp("/", left, right) =&gt; 
+        val top = format(left, fractionPrecedence)
+        val bot = format(right, fractionPrecedence)
+        val line = elem('-', top.width.max(bot.width), 1)
+        val frac = top above line above bot
+        if enclPrec != fractionPrecedence then frac
+        else elem(" ") beside frac beside elem(" ")
+
+<hr>
+      case BinOp(op, left, right) =&gt; 
+        val opPrec = precedence(op)
+        val l = format(left, opPrec) 
+        val r = format(right, opPrec + 1)
+        val oper = l beside elem(" " + op + " ") beside r 
+        if enclPrec &lt;= opPrec then oper
+        else elem("(") beside oper beside elem(")")
+
+<hr>
+      case BinOp("/", left, right) =&gt; ...
+
+<hr>
+  BinOp("-", Var("a"), BinOp("-", Var("b"), Var("c")))
+
+<hr>
+// In file <a href="../pattern-matching/Test.scala">pattern-matching/Test.scala</a>
+
+  import org.stairwaybook.expr.*
+
+  object Express:
+
+    def main(args: Array[String]): Unit =
+
+      val f = new ExprFormatter
+
+      val e1 = BinOp("*", BinOp("/", Num(1), Num(2)),
+                          BinOp("+", Var("x"), Num(1)))
+
+      val e2 = BinOp("+", BinOp("/", Var("x"), Num(2)),
+                          BinOp("/", Num(1.5), Var("x")))
+
+      val e3 = BinOp("/", e1, e2)
+
+      def show(e: Expr) = println(s"${f.format(e)}\n\n")
+
+      for e &lt;- Vector(e1, e2, e3) do show(e)
+
+<hr>
+  scala Express
+
+<hr>
+  </pre>
+  <h3><a name="sec9"></a>13.9 Conclusion</h3>
+
+
+ <table>
+ <tr valign="top">
+ <td>
+ <div id="moreinfo">
+ <p>
+ For more information about <em>Programming in Scala, Fifth Edition</em> (the "Stairway Book"), please visit:
+ </p>
+ 
+ <p>
+ <a href="http://www.artima.com/shop/programming_in_scala_5ed">http://www.artima.com/shop/programming_in_scala_5ed</a>
+ </p>
+ 
+ <p>
+ and:
+ </p>
+ 
+ <p>
+ <a href="http://booksites.artima.com/programming_in_scala_5ed">http://booksites.artima.com/programming_in_scala_5ed</a>
+ </p>
+ </div>
+ </td>
+ <td>
+ <div id="license">
+ <p>
+   Copyright &copy; 2007-2020 Artima, Inc. All rights reserved.
+ </p>
+
+ <p>
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ </p>
+
+ <p style="margin-left: 20px">
+   <a href="http://www.apache.org/licenses/LICENSE-2.0">
+     http://www.apache.org/licenses/LICENSE-2.0
+   </a>
+ </p>
+
+ <p>
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ </p>
+ </div>
+ </td>
+ </tr>
+ </table>
+
+</body>
+</html>

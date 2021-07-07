@@ -1,0 +1,681 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/2002/REC-xhtml1-20020801/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO-8859-1" />
+  <title>Code Examples for Programming in Scala, Fifth Edition</title>
+  <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div id="mainTitles"><h3>Code Examples for</h3><h2>Programming in Scala, Fifth Edition</h2></div>  <p><a href="../index.html">
+    Return to chapter index
+  </a></p>
+  <h2>23 Typeclasses</h2>
+
+  <p><a href="../typeclasses/transcript.txt">
+    Sample run of chapter's interpreter examples
+  </a></p>
+
+  <ul>
+
+    <li>23.1 <a href="#sec1">Why typeclasses?</a></li>
+    <li>23.2 <a href="#sec2">Context bounds</a></li>
+    <li>23.3 <a href="#sec3">Main methods</a></li>
+    <li>23.4 <a href="#sec4">Multiversal equality</a></li>
+    <li>23.5 <a href="#sec5">Implicit conversions</a></li>
+    <li>23.6 <a href="#sec6">Typeclass case study: JSON serialization</a></li>
+    <li>23.7 <a href="#sec7">Conclusion</a></li>
+  </ul>
+
+  <h3><a name="sec1"></a>23.1 Why typeclasses?</h3>
+
+  <pre><hr>
+// In file <a href="../typeclasses/Misc.scala">typeclasses/Misc.scala</a>
+
+  def -(x: Double): Double
+  def -(x: Float): Float
+  def -(x: Long): Long
+  def -(x: Int): Int
+  def -(x: Char): Int
+  def -(x: Short): Int
+  def -(x: Byte): Int
+
+<hr>
+// In file <a href="../typeclasses/rainbow-color.scala">typeclasses/rainbow-color.scala</a>
+
+  sealed trait RainbowColor
+  class Red extends RainbowColor
+  class Orange extends RainbowColor
+  class Yellow extends RainbowColor
+  class Green extends RainbowColor
+  class Blue extends RainbowColor
+  class Indigo extends RainbowColor
+  class Violet extends RainbowColor
+
+<hr>
+// In file <a href="../typeclasses/Misc.scala">typeclasses/Misc.scala</a>
+
+def paint(rc: RainbowColor): Unit
+
+<hr>
+  class Hope[+T &lt;: Ordered[T]] extends Ordered[Hope[T]]
+<span class="output">  1 |class Hope[+T &lt;: Ordered[T]] extends Ordered[Hope[T]]</span>
+<span class="output">    |^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="output">    |covariant type T occurs in invariant position in type</span>
+<span class="output">    |Object with Ordered[Hope[T]] {...} of class Hope</span>
+
+<hr>
+// In file <a href="../typeclasses/hope-utils.scala">typeclasses/hope-utils.scala</a>
+
+  import org.stairwaybook.enums_and_adts.hope.Hope
+
+  object HopeUtils:
+
+    given hopeOrdering[T](using
+        ord: Ordering[T]): Ordering[Hope[T]] with
+
+      def compare(lh: Hope[T], rh: Hope[T]): Int =
+        import Hope.{Glad, Sad}
+        (lh, rh) match
+          case (Sad, Sad) =&gt; 0
+          case (Sad, _) =&gt; -1
+          case (_, Sad) =&gt; +1
+          case (Glad(lhv), Glad(rhv)) =&gt;
+            ord.compare(lhv, rhv)
+
+<hr>
+  </pre>
+  <h3><a name="sec2"></a>23.2 Context bounds</h3>
+
+  <pre><hr>
+// In file <a href="../typeclasses/MaxList1.scala">typeclasses/MaxList1.scala</a>
+
+  def maxList[T](elements: List[T])
+        (using ordering: Ordering[T]): T =
+
+    elements match
+      case List() =&gt;
+        throw new IllegalArgumentException("empty list!")
+      case List(x) =&gt; x
+      case x :: rest =&gt;
+        val maxRest = maxList(rest)(using ordering)
+        if ordering.gt(x, maxRest) then x
+        else maxRest
+
+<hr>
+// In file <a href="../typeclasses/MaxList2a.scala">typeclasses/MaxList2a.scala</a>
+
+  def maxList[T](elements: List[T])
+        (using ordering: Ordering[T]): T =
+
+    elements match
+      case List() =&gt;
+        throw new IllegalArgumentException("empty list!")
+      case List(x) =&gt; x
+      case x :: rest =&gt;
+        val maxRest = maxList(rest)       // Uses the given.
+        if ordering.gt(x, maxRest) then x // This ordering is
+        else maxRest                      // still explicit.
+
+<hr>
+  def summon[T](using t: T) = t
+
+<hr>
+  def maxList[T](elements: List[T])
+        (using comparator: Ordering[T]): T = // same body...
+
+<hr>
+// In file <a href="../typeclasses/MaxList2.scala">typeclasses/MaxList2.scala</a>
+
+  def maxList[T](elements: List[T])
+        (using ordering: Ordering[T]): T =
+
+    elements match
+      case List() =&gt;
+        throw new IllegalArgumentException("empty list!")
+      case List(x) =&gt; x
+      case x :: rest =&gt;
+        val maxRest = maxList(rest)
+        if summon[Ordering[T]].gt(x, maxRest) then x
+        else maxRest
+
+<hr>
+// In file <a href="../typeclasses/MaxList2c.scala">typeclasses/MaxList2c.scala</a>
+
+  def maxList[T](elements: List[T])
+        (using iceCream: Ordering[T]): T = ??? // same body...
+
+<hr>
+// In file <a href="../typeclasses/MaxListContextBound.scala">typeclasses/MaxListContextBound.scala</a>
+
+  def maxList[T : Ordering](elements: List[T]): T =
+    elements match
+      case List() =&gt;
+        throw new IllegalArgumentException("empty list!")
+      case List(x) =&gt; x
+      case x :: rest =&gt;
+        val maxRest = maxList(rest)
+        if summon[Ordering[T]].gt(x, maxRest) then x
+        else maxRest
+
+<hr>
+  </pre>
+  <h3><a name="sec3"></a>23.3 Main methods</h3>
+
+  <pre><hr>
+// In file <a href="../typeclasses/echoargs.scala">typeclasses/echoargs.scala</a>
+
+  // In file echoargs.scala
+  @main def echo(args: String*) =
+    println(args.mkString(" "))
+
+<hr>
+  $ scala echoargs.scala Running as a script
+<span class="output">  Running as a script</span>
+
+<hr>
+  $ scalac echoargs.scala
+
+  $ scala echo Running as an application
+<span class="output">  Running as an application</span>
+
+<hr>
+// In file <a href="../typeclasses/repeat.scala">typeclasses/repeat.scala</a>
+
+  // In file repeat.scala
+  @main def repeat(word: String, count: Int) =
+
+    val msg =
+      if count &gt; 0 then
+        val words = List.fill(count)(word)
+        words.mkString(" ")
+      else
+        "Please enter a word and a positive integer count."
+
+    println(msg)
+
+<hr>
+  $ scalac repeat.scala
+
+  $ scala repeat hello 3
+<span class="output">  hello hello hello</span>
+
+<hr>
+  trait FromString[T]:
+    def fromString(s: String): T
+
+<hr>
+// In file <a href="../typeclasses/moody.scala">typeclasses/moody.scala</a>
+
+  // In file moody.scala
+  enum Mood:
+    case Surprised, Angry, Neutral
+
+<hr>
+// In file <a href="../typeclasses/moody.scala">typeclasses/moody.scala</a>
+
+  // In file moody.scala
+  val errmsg =
+    "Please enter a word, a positive integer count, and\n" +
+    "a mood (one of 'angry', 'surprised', or 'neutral')"
+
+  @main def repeat(word: String, count: Int, mood: Mood) =
+    val msg =
+      if count &gt; 0 then
+        val words = List.fill(count)(word.trim)
+        val punc =
+          mood match
+            case Mood.Angry =&gt; "!"
+            case Mood.Surprised =&gt; "?"
+            case Mood.Neutral =&gt; ""
+        val sep = punc + " "
+        words.mkString(sep) + punc
+      else errmsg
+
+    println(msg)
+
+<hr>
+// In file <a href="../typeclasses/moody.scala">typeclasses/moody.scala</a>
+
+  // In file moody.scala
+  object Mood:
+
+    import scala.util.CommandLineParser.FromString
+
+    given moodFromString: FromString[Mood] with
+      def fromString(s: String): Mood =
+        s.trim.toLowerCase match
+          case "angry" =&gt; Mood.Angry
+          case "surprised" =&gt; Mood.Surprised
+          case "neutral" =&gt; Mood.Neutral
+          case _ =&gt; throw new IllegalArgumentException(errmsg)
+
+<hr>
+  $ scalac moody.scala
+
+  $ scala repeat hello 3 neutral
+<span class="output">  hello hello hello</span>
+
+  $ scala repeat hello 3 surprised
+<span class="output">  hello? hello? hello?</span>
+
+  $ scala repeat hello 3 angry
+<span class="output">  hello! hello! hello!</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec4"></a>23.4 Multiversal equality</h3>
+
+  <pre><hr>
+  scala&gt; "hello" == Option("hello") // (in Scala 2)
+<span class="output">  val res0: Boolean = false</span>
+
+<hr>
+  scala&gt; "hello" == Option("hello") // (in Scala 3)
+<span class="output">  1 |"hello" == Option("hello")</span>
+<span class="output">    |^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="output">    |Values of types String and Option[String] cannot be</span>
+<span class="output">    |  compared with == or !=</span>
+
+<hr>
+  // On class Any:
+  final def ==(that: Any): Boolean
+  final def !=(that: Any): Boolean
+
+<hr>
+  sealed trait CanEqual[-L, -R]
+
+<hr>
+  object CanEqual:
+    object derived extends CanEqual[Any, Any]
+
+<hr>
+// In file <a href="../typeclasses/apple-orange-example1.scala">typeclasses/apple-orange-example1.scala</a>
+
+  case class Apple(size: Int)
+
+<hr>
+// In file <a href="../typeclasses/apple-orange-example1.scala">typeclasses/apple-orange-example1.scala</a>
+
+  val appleTwo = Apple(2)
+  val appleTwoToo = Apple(2)
+  appleTwo == appleTwoToo // true
+
+<hr>
+// In file <a href="../typeclasses/apple-orange-example1.scala">typeclasses/apple-orange-example1.scala</a>
+
+  case class Orange(size: Int)
+  val orangeTwo = Orange(2)
+  appleTwo == orangeTwo // false
+
+<hr>
+  import scala.language.strictEquality
+
+<hr>
+  scala&gt; appleTwo == orangeTwo
+<span class="output">  1 |appleTwo == orangeTwo</span>
+<span class="output">    |^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="output">    |Values of types Apple and Orange cannot be</span>
+<span class="output">    |  compared with == or !=</span>
+
+<hr>
+  scala&gt; appleTwo == appleTwoToo
+<span class="output">  1 |appleTwo == appleTwoToo</span>
+<span class="output">    |^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="output">    |Values of types Apple and Apple cannot be</span>
+<span class="output">    |  compared with == or !=</span>
+
+<hr>
+// In file <a href="../typeclasses/apple-orange-example2.scala">typeclasses/apple-orange-example2.scala</a>
+
+  case class Apple(size: Int)
+  object Apple:
+    given canEq: CanEqual[Apple, Apple] = CanEqual.derived
+
+<hr>
+// In file <a href="../typeclasses/apple-orange-example3.scala">typeclasses/apple-orange-example3.scala</a>
+
+  case class Apple(size: Int) derives CanEqual // idiomatic
+
+<hr>
+  appleTwo == appleTwoToo // true too
+
+<hr>
+  </pre>
+  <h3><a name="sec5"></a>23.5 Implicit conversions</h3>
+
+  <pre><hr>
+// In file <a href="../typeclasses/implicit-conversion.scala">typeclasses/implicit-conversion.scala</a>
+
+  case class Street(value: String)
+
+<hr>
+// In file <a href="../typeclasses/implicit-conversion.scala">typeclasses/implicit-conversion.scala</a>
+
+  val street = Street("123 Main St")
+
+<hr>
+  scala&gt; val streetStr: String = street
+<span class="output">  1 |val streetStr: String = street</span>
+<span class="output">    |                        ^^^^^^</span>
+<span class="output">    |                        Found:    (street : Street)</span>
+<span class="output">    |                        Required: String</span>
+
+<hr>
+// In file <a href="../typeclasses/implicit-conversion.scala">typeclasses/implicit-conversion.scala</a>
+
+  val streetStr: String = street.value // 123 Main St
+
+<hr>
+  abstract class Conversion[-T, +U] extends (T =&gt; U):
+    def apply(x: T): U
+
+<hr>
+// In file <a href="../typeclasses/implicit-conversion.scala">typeclasses/implicit-conversion.scala</a>
+
+  given streetToString: Conversion[Street, String] = _.value
+
+<hr>
+// In file <a href="../typeclasses/implicit-conversion.scala">typeclasses/implicit-conversion.scala</a>
+
+  import scala.language.implicitConversions
+
+<hr>
+// In file <a href="../typeclasses/implicit-conversion.scala">typeclasses/implicit-conversion.scala</a>
+
+  val streetStr: String = street
+
+<hr>
+  val streetStr: String = streetToString(street)
+
+<hr>
+  </pre>
+  <h3><a name="sec6"></a>23.6 Typeclass case study: JSON serialization</h3>
+
+  <pre><hr>
+  {
+    "style": "tennis",
+    "size": 10,
+    "inStock": true,
+    "colors": ["beige", "white", "blue"],
+    "humor": null
+  }
+
+<hr>
+trait JsonSerializer[T]:
+  def serialize(o: T): String
+
+<hr>
+// In file <a href="../typeclasses/JsonSerializer.scala">typeclasses/JsonSerializer.scala</a>
+
+trait JsonSerializer[T]:
+  def serialize(o: T): String
+
+  extension (a: T)
+    def toJson: String = serialize(a)
+
+<hr>
+// In file <a href="../typeclasses/JsonSerializer.scala">typeclasses/JsonSerializer.scala</a>
+
+object JsonSerializer:
+  given stringSerializer: JsonSerializer[String] with
+    def serialize(s: String) = s"\"$s\""
+
+  given intSerializer: JsonSerializer[Int] with
+    def serialize(n: Int) = n.toString
+
+  given longSerializer: JsonSerializer[Long] with
+    def serialize(n: Long) = n.toString
+
+  given booleanSerializer: JsonSerializer[Boolean] with
+    def serialize(b: Boolean) = b.toString
+
+<hr>
+// In file <a href="../typeclasses/ToJsonMethods.scala">typeclasses/ToJsonMethods.scala</a>
+
+  object ToJsonMethods:
+    extension [T](a: T)(using jser: JsonSerializer[T])
+      def toJson: String = jser.serialize(a)
+
+<hr>
+// In file <a href="../typeclasses/json1.scala">typeclasses/json1.scala</a>
+
+  import ToJsonMethods.*
+  "tennis".toJson // "tennis"
+  10.toJson // 10
+  true.toJson // true
+
+<hr>
+// In file <a href="../typeclasses/json-models.scala">typeclasses/json-models.scala</a>
+
+  case class Address(
+    street: String,
+    city: String,
+    state: String,
+    zip: Int
+  )
+
+  case class Phone(
+    countryCode: Int,
+    phoneNumber: Long
+  )
+
+  case class Contact(
+    name: String,
+    addresses: List[Address],
+    phones: List[Phone]
+  )
+
+  case class AddressBook(contacts: List[Contact])
+
+<hr>
+// In file <a href="../typeclasses/json-models.scala">typeclasses/json-models.scala</a>
+
+  object Address:
+    given addressSerializer: JsonSerializer[Address] with
+      def serialize(a: Address) =
+        import ToJsonMethods.{toJson as asJson}
+        s"""|{
+            |  "street": ${a.street.asJson},
+            |  "city": ${a.city.asJson},
+            |  "state": ${a.state.asJson},
+            |  "zip": ${a.zip.asJson}
+            |}""".stripMargin
+
+  object Phone:
+    given phoneSerializer: JsonSerializer[Phone] with
+      def serialize(p: Phone) =
+        import ToJsonMethods.{toJson as asJson}
+        s"""|{
+            |  "countryCode": ${p.countryCode.asJson},
+            |  "phoneNumber": ${p.phoneNumber.asJson}
+            |}""".stripMargin
+
+<hr>
+object JsonSerializer:
+  // givens for strings, ints, and booleans...
+  given listSerializer[T](using
+      JsonSerializer[T]): JsonSerializer[List[T]] with
+    def serialize(ts: List[T]) =
+      s"[${ts.map(t =&gt; t.toJson).mkString(", ")}]"
+
+<hr>
+// In file <a href="../typeclasses/json2.scala">typeclasses/json2.scala</a>
+
+  import ToJsonMethods.*
+  List(1, 2, 3).toJson // [1, 2, 3]
+
+<hr>
+  scala&gt; List(1.0, 2.0, 3.0).toJson
+<span class="output">  1 |List(1.0, 2.0, 3.0).toJson</span>
+<span class="output">    |^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="output">    |value toJson is not a member of List[Double].</span>
+<span class="output">    |An extension method was tried, but could not be fully</span>
+<span class="output">    |constructed:</span>
+<span class="output">    |</span>
+<span class="output">    |  ToJsonMethods.toJson[List[Double]](</span>
+<span class="output">    |    List.apply[Double]([1.0d,2.0d,3.0d : Double]*)</span>
+<span class="output">    |  )(JsonSerializer.listSerializer[T](</span>
+<span class="output">    |      /* missing */summon[JsonSerializer[Double]]))</span>
+<span class="output">    |  failed with</span>
+<span class="output">    |</span>
+<span class="output">    |    no implicit argument of type JsonSerializer[List[Double]]</span>
+<span class="output">    |    was found for parameter json of method toJson in</span>
+<span class="output">    |    object ToJsonMethods.</span>
+<span class="output">    |    I found:</span>
+<span class="output">    |</span>
+<span class="output">    |      JsonSerializer.listSerializer[T](</span>
+<span class="output">    |          /* missing */summon[JsonSerializer[Double]])</span>
+<span class="output">    |</span>
+<span class="output">    |    But no implicit values were found that match type</span>
+<span class="output">    |    JsonSerializer[Double].</span>
+
+<hr>
+// In file <a href="../typeclasses/json-models.scala">typeclasses/json-models.scala</a>
+
+  object Contact:
+    given contactSerializer: JsonSerializer[Contact] with
+      def serialize(c: Contact) =
+        import ToJsonMethods.{toJson as asJson}
+        s"""|{
+            |  "name": ${c.name.asJson},
+            |  "addresses": ${c.addresses.asJson},
+            |  "phones": ${c.phones.asJson}
+            |}""".stripMargin
+
+  object AddressBook:
+    given addressBookSerializer: JsonSerializer[AddressBook] with
+      def serialize(a: AddressBook) =
+        import ToJsonMethods.{toJson as asJson}
+        s"""|{
+            |  "contacts": ${a.contacts.asJson}
+            |}""".stripMargin
+
+<hr>
+// In file <a href="../typeclasses/json2.scala">typeclasses/json2.scala</a>
+
+  addressBook.toJson
+
+<hr>
+// In file <a href="../typeclasses/json2.scala">typeclasses/json2.scala</a>
+
+  val addressBook =
+    AddressBook(
+      List(
+        Contact(
+          "Bob Smith",
+          List(
+            Address(
+              "12345 Main Street",
+              "San Francisco",
+              "CA",
+              94105
+            ),
+            Address(
+              "500 State Street",
+              "Los Angeles",
+              "CA",
+              90007
+            )
+          ),
+          List(
+            Phone(
+              1,
+              5558881234
+            ),
+            Phone(
+              49,
+              5558413323
+              )
+          )
+        )
+      )
+    )
+
+<hr>
+  {
+    "contacts": [{
+      "name": "Bob Smith",
+      "addresses": [{
+        "street": "12345 Main Street",
+        "city": "San Francisco",
+        "state": "CA",
+        "zip": 94105
+      }, {
+        "street": "500 State Street",
+        "city": "Los Angeles",
+        "state": "CA",
+        "zip": 90007
+      }],
+      "phones": [{
+        "countryCode": 1,
+        "phoneNumber": 5558881234
+      }, {
+        "countryCode": 49,
+        "phoneNumber": 5558413323
+      }]
+    }]
+  }
+
+<hr>
+  </pre>
+  <h3><a name="sec7"></a>23.7 Conclusion</h3>
+
+
+ <table>
+ <tr valign="top">
+ <td>
+ <div id="moreinfo">
+ <p>
+ For more information about <em>Programming in Scala, Fifth Edition</em> (the "Stairway Book"), please visit:
+ </p>
+ 
+ <p>
+ <a href="http://www.artima.com/shop/programming_in_scala_5ed">http://www.artima.com/shop/programming_in_scala_5ed</a>
+ </p>
+ 
+ <p>
+ and:
+ </p>
+ 
+ <p>
+ <a href="http://booksites.artima.com/programming_in_scala_5ed">http://booksites.artima.com/programming_in_scala_5ed</a>
+ </p>
+ </div>
+ </td>
+ <td>
+ <div id="license">
+ <p>
+   Copyright &copy; 2007-2020 Artima, Inc. All rights reserved.
+ </p>
+
+ <p>
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ </p>
+
+ <p style="margin-left: 20px">
+   <a href="http://www.apache.org/licenses/LICENSE-2.0">
+     http://www.apache.org/licenses/LICENSE-2.0
+   </a>
+ </p>
+
+ <p>
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ </p>
+ </div>
+ </td>
+ </tr>
+ </table>
+
+</body>
+</html>

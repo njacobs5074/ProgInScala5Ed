@@ -1,0 +1,439 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/2002/REC-xhtml1-20020801/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO-8859-1" />
+  <title>Code Examples for Programming in Scala, Fifth Edition</title>
+  <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div id="mainTitles"><h3>Code Examples for</h3><h2>Programming in Scala, Fifth Edition</h2></div>  <p><a href="../index.html">
+    Return to chapter index
+  </a></p>
+  <h2>22 Extension Methods</h2>
+
+  <p><a href="../extension-methods/transcript.txt">
+    Sample run of chapter's interpreter examples
+  </a></p>
+
+  <ul>
+
+    <li>22.1 <a href="#sec1">The basics</a></li>
+    <li>22.2 <a href="#sec2">Generic extensions</a></li>
+    <li>22.3 <a href="#sec3">Collective extensions</a></li>
+    <li>22.4 <a href="#sec4">Using a typeclass</a></li>
+    <li>22.5 <a href="#sec5">Extension methods for givens</a></li>
+    <li>22.6 <a href="#sec6">Where Scala looks for extension methods</a></li>
+    <li>22.7 <a href="#sec7">Conclusion</a></li>
+  </ul>
+
+  <h3><a name="sec1"></a>22.1 The basics</h3>
+
+  <pre><hr>
+// In file <a href="../extension-methods/singleSpace-1.scala">extension-methods/singleSpace-1.scala</a>
+
+  def singleSpace(s: String): String =
+    s.trim.split("\\s+").mkString(" ")
+
+<hr>
+// In file <a href="../extension-methods/singleSpace-1.scala">extension-methods/singleSpace-1.scala</a>
+
+  singleSpace("A  Tale\tof Two   Cities")
+  // "A Tale of Two Cities"
+  singleSpace("  It was  the\t\tbest\nof times. ")
+  // "It was the best of times."
+
+<hr>
+// In file <a href="../extension-methods/singleSpace-1.scala">extension-methods/singleSpace-1.scala</a>
+
+  val s = "One  Fish, Two\tFish "
+  val t = " One Fish,  Two Fish"
+  singleSpace(s) == singleSpace(t) // true
+
+<hr>
+  s.singleSpace == t.singleSpace // if only this were true
+
+<hr>
+// In file <a href="../extension-methods/singleSpace-extension.scala">extension-methods/singleSpace-extension.scala</a>
+
+  extension (s: String)
+    def singleSpace: String =
+      s.trim.split("\\s+").mkString(" ")
+
+<hr>
+// In file <a href="../extension-methods/singleSpace-extension.scala">extension-methods/singleSpace-extension.scala</a>
+
+  s.singleSpace == t.singleSpace // It's true!
+
+<hr>
+// In file <a href="../extension-methods/singleSpace-2.scala">extension-methods/singleSpace-2.scala</a>
+
+  // With internal extension marker
+  def singleSpace(s: String): String =
+    s.trim.split("\\s+").mkString(" ")
+
+<hr>
+  scala&gt; extension (s: String)
+       |   def singleSpace: String =
+       |     s.trim.split("\\s+").mkString(" ")
+<span class="output">  def singleSpace(s: String): String</span>
+
+<hr>
+  scala&gt; s.singleSpace == t.singleSpace
+<span class="output">  val res0: Boolean = true</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec2"></a>22.2 Generic extensions</h3>
+
+  <pre><hr>
+// In file <a href="../extension-methods/generic-extensions-test-1.scala">extension-methods/generic-extensions-test-1.scala</a>
+
+  List(1, 2, 3).head // 1
+  List.empty.head    // throws NoSuchElementException
+
+<hr>
+// In file <a href="../extension-methods/generic-extensions-test-2.scala">extension-methods/generic-extensions-test-2.scala</a>
+
+  List(1, 2, 3).headOption // Some(1)
+  List.empty.headOption    // None
+
+<hr>
+// In file <a href="../extension-methods/generic-extensions-test-3.scala">extension-methods/generic-extensions-test-3.scala</a>
+
+  List(1, 2, 3).tail // List(2, 3)
+  List.empty.tail    // throws NoSuchElementException
+
+<hr>
+// In file <a href="../extension-methods/tailOption-extension.scala">extension-methods/tailOption-extension.scala</a>
+
+  extension [T](xs: List[T])
+    def tailOption: Option[List[T]] =
+      if xs.nonEmpty then Some(xs.tail) else None
+
+<hr>
+// In file <a href="../extension-methods/tailOption-extension.scala">extension-methods/tailOption-extension.scala</a>
+
+List(1, 2, 3).tailOption       // Some(List(2, 3))
+List.empty[Int].tailOption     // None
+List("A", "B", "C").tailOption // Some(List(B, C))
+List.empty[String].tailOption  // None
+
+<hr>
+// In file <a href="../extension-methods/tailOption-extension.scala">extension-methods/tailOption-extension.scala</a>
+
+tailOption[Int](List(1, 2, 3))  // Some(List(2, 3))
+
+<hr>
+  </pre>
+  <h3><a name="sec3"></a>22.3 Collective extensions</h3>
+
+  <pre><hr>
+// In file <a href="../extension-methods/collective-extensions-1.scala">extension-methods/collective-extensions-1.scala</a>
+
+  Int.MaxValue // 2147483647
+  Int.MinValue // -2147483648
+
+<hr>
+// In file <a href="../extension-methods/collective-extensions-1.scala">extension-methods/collective-extensions-1.scala</a>
+
+  Int.MinValue.abs // -2147483648 (overflow)
+
+<hr>
+// In file <a href="../extension-methods/collective-extensions-1.scala">extension-methods/collective-extensions-1.scala</a>
+
+  extension (n: Int)
+    def absOption: Option[Int] =
+      if n != Int.MinValue then Some(n.abs) else None
+
+<hr>
+// In file <a href="../extension-methods/collective-extensions-1.scala">extension-methods/collective-extensions-1.scala</a>
+
+  42.absOption           // Some(42)
+  -42.absOption          // Some(42)
+  Int.MaxValue.absOption // Some(2147483647)
+  Int.MinValue.absOption // None
+
+<hr>
+// In file <a href="../extension-methods/collective-extensions-1.scala">extension-methods/collective-extensions-1.scala</a>
+
+  -Int.MinValue // -2147483648 (overflow)
+
+<hr>
+// In file <a href="../extension-methods/int-negateOption.scala">extension-methods/int-negateOption.scala</a>
+
+  extension (n: Int)
+    def absOption: Option[Int] =
+      if n != Int.MinValue then Some(n.abs) else None
+    def negateOption: Option[Int] =
+      if n != Int.MinValue then Some(-n) else None
+
+<hr>
+// In file <a href="../extension-methods/int-negateOption.scala">extension-methods/int-negateOption.scala</a>
+
+  -42.negateOption          // Some(42)
+  42.negateOption           // Some(-42)
+  Int.MaxValue.negateOption // Some(-2147483647)
+  Int.MinValue.negateOption // None
+
+<hr>
+// In file <a href="../extension-methods/int-extension.scala">extension-methods/int-extension.scala</a>
+
+  extension (n: Int)
+    def isMinValue: Boolean = n == Int.MinValue
+    def absOption: Option[Int] =
+      if !isMinValue then Some(n.abs) else None
+    def negateOption: Option[Int] =
+      if !isMinValue then Some(-n) else None
+
+<hr>
+  // All with internal extension markers
+  def isMinValue(n: Int): Boolean = n == Int.MinValue
+  def absOption(n: Int): Option[Int] =
+    if !n.isMinValue then Some(n.abs) else None
+  def negateOption(n: Int): Option[Int] =
+    if !n.isMinValue then Some(-n) else None
+
+<hr>
+  </pre>
+  <h3><a name="sec4"></a>22.4 Using a typeclass</h3>
+
+  <pre><hr>
+// In file <a href="../extension-methods/typeclass-test.scala">extension-methods/typeclass-test.scala</a>
+
+  Long.MinValue.abs  // -9223372036854775808 (overflow)
+  -Long.MinValue     // -9223372036854775808 (overflow)
+  Short.MinValue.abs // -32768 (overflow)
+  -Short.MinValue    // -32768 (overflow)
+  Byte.MinValue.abs  // -128 (overflow)
+  -Byte.MinValue     // -128 (overflow)
+
+<hr>
+// In file <a href="../extension-methods/TwosComplement.scala">extension-methods/TwosComplement.scala</a>
+
+  trait TwosComplement[N]:
+
+    def equalsMinValue(n: N): Boolean
+    def absOf(n: N): N
+    def negationOf(n: N): N
+
+  object TwosComplement:
+
+    given tcOfByte: TwosComplement[Byte] with
+      def equalsMinValue(n: Byte) = n == Byte.MinValue
+      def absOf(n: Byte) = n.abs
+      def negationOf(n: Byte) = (-n).toByte
+
+    given tcOfShort: TwosComplement[Short] with
+      def equalsMinValue(n: Short) = n == Short.MinValue
+      def absOf(n: Short) = n.abs
+      def negationOf(n: Short) = (-n).toShort
+
+    given tcOfInt: TwosComplement[Int] with
+      def equalsMinValue(n: Int) = n == Int.MinValue
+      def absOf(n: Int) = n.abs
+      def negationOf(n: Int) = -n
+
+    given tcOfLong: TwosComplement[Long] with
+      def equalsMinValue(n: Long) = n == Long.MinValue
+      def absOf(n: Long) = n.abs
+      def negationOf(n: Long) = -n
+
+<hr>
+// In file <a href="../extension-methods/TwosComplement-extension.scala">extension-methods/TwosComplement-extension.scala</a>
+
+  extension [N](n: N)(using tc: TwosComplement[N])
+    def isMinValue: Boolean = tc.equalsMinValue(n)
+    def absOption: Option[N] =
+      if !isMinValue then Some(tc.absOf(n)) else None
+    def negateOption: Option[N] =
+      if !isMinValue then Some(tc.negationOf(n)) else None
+
+<hr>
+// In file <a href="../extension-methods/TwosComplement-extension.scala">extension-methods/TwosComplement-extension.scala</a>
+
+  Byte.MaxValue.negateOption // Some(-127)
+  Byte.MinValue.negateOption // None
+  Long.MaxValue.negateOption // -9223372036854775807
+  Long.MinValue.negateOption // None
+
+<hr>
+  BigInt(42).negateOption
+<span class="output">  1 |BigInt(42).negateOption</span>
+<span class="output">    |^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="output">    |value negateOption is not a member of BigInt.</span>
+<span class="output">    |An extension method was tried, but could not be</span>
+<span class="output">    |fully constructed:</span>
+<span class="output">    |</span>
+<span class="output">    |    negateOption[BigInt](BigInt.apply(42))(</span>
+<span class="output">    |      /* missing */summon[TwosComplement[BigInt]]</span>
+<span class="output">    |    )</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec5"></a>22.5 Extension methods for givens</h3>
+
+  <pre><hr>
+// In file <a href="../extension-methods/TwosComplementOps-extension.scala">extension-methods/TwosComplementOps-extension.scala</a>
+
+  object TwosComplementOps:
+    extension [N](n: N)(using tc: TwosComplement[N])
+      def isMinValue: Boolean = tc.equalsMinValue(n)
+      def absOption: Option[N] =
+        if !isMinValue then Some(tc.absOf(n)) else None
+      def negateOption: Option[N] =
+        if !isMinValue then Some(tc.negationOf(n)) else None
+
+<hr>
+// In file <a href="../extension-methods/TwosComplementOps-extension.scala">extension-methods/TwosComplementOps-extension.scala</a>
+
+  import TwosComplementOps.*
+
+<hr>
+// In file <a href="../extension-methods/TwosComplementOps-extension.scala">extension-methods/TwosComplementOps-extension.scala</a>
+
+  -42.absOption // Some(42)
+
+<hr>
+// In file <a href="../extension-methods/insert.scala">extension-methods/insert.scala</a>
+
+  def insert[T](x: T, xs: List[T])(using ord: Ord[T]): List[T] =
+    if xs.isEmpty || ord.lteq(x, xs.head) then x :: xs
+    else xs.head :: insert(x, xs.tail)
+
+<hr>
+  x &lt;= xs.head // Ah, the clarity!
+
+<hr>
+// In file <a href="../extension-methods/insert2.scala">extension-methods/insert2.scala</a>
+
+  // (Not yet the best design)
+  object OrdOps:
+    extension [T](lhs: T)(using ord: Ord[T])
+      def &lt; (rhs: T): Boolean = ord.lt(lhs, rhs)
+      def &lt;= (rhs: T): Boolean = ord.lteq(lhs, rhs)
+      def &gt; (rhs: T): Boolean = ord.gt(lhs, rhs)
+      def &gt;= (rhs: T): Boolean = ord.gteq(lhs, rhs)
+
+<hr>
+// In file <a href="../extension-methods/insert2.scala">extension-methods/insert2.scala</a>
+
+  def insert[T](x: T, xs: List[T])(using Ord[T]): List[T] =
+    import OrdOps.*
+    if xs.isEmpty || x &lt;= xs.head then x :: xs
+    else xs.head :: insert(x, xs.tail)
+
+<hr>
+// In file <a href="../extension-methods/insert3.scala">extension-methods/insert3.scala</a>
+
+  trait Ord[T]:
+
+    def compare(x: T, y: T): Int
+    def lt(x: T, y: T): Boolean = compare(x, y) &lt; 0
+    def lteq(x: T, y: T): Boolean = compare(x, y) &lt;= 0
+    def gt(x: T, y: T): Boolean = compare(x, y) &gt; 0
+    def gteq(x: T, y: T): Boolean = compare(x, y) &gt;= 0
+
+    // (This is the best design)
+    extension (lhs: T)
+      def &lt; (rhs: T): Boolean = lt(lhs, rhs)
+      def &lt;= (rhs: T): Boolean = lteq(lhs, rhs)
+      def &gt; (rhs: T): Boolean = gt(lhs, rhs)
+      def &gt;= (rhs: T): Boolean = gteq(lhs, rhs)
+
+<hr>
+// In file <a href="../extension-methods/insert3.scala">extension-methods/insert3.scala</a>
+
+  def insert[T](x: T, xs: List[T])(using Ord[T]): List[T] =
+    if xs.isEmpty || x &lt;= xs.head then x :: xs
+    else xs.head :: insert(x, xs.tail)
+
+<hr>
+// In file <a href="../extension-methods/Ord-internal-extension-markers.scala">extension-methods/Ord-internal-extension-markers.scala</a>
+
+  trait Ord[T]:
+
+    def compare(x: T, y: T): Int
+    def lt(x: T, y: T): Boolean = compare(x, y) &lt; 0
+    def lteq(x: T, y: T): Boolean = compare(x, y) &lt;= 0
+    def gt(x: T, y: T): Boolean = compare(x, y) &gt; 0
+    def gteq(x: T, y: T): Boolean = compare(x, y) &gt;= 0
+
+    // With internal extension markers:
+    def &lt; (lhs: T)(rhs: T): Boolean = lt(lhs, rhs)
+    def &lt;= (lhs: T)(rhs: T): Boolean = lteq(lhs, rhs)
+    def &gt; (lhs: T)(rhs: T): Boolean = gt(lhs, rhs)
+    def &gt;= (lhs: T)(rhs: T): Boolean = gteq(lhs, rhs)
+
+<hr>
+  </pre>
+  <h3><a name="sec6"></a>22.6 Where Scala looks for extension methods</h3>
+
+  <pre><hr>
+// In file <a href="../extension-methods/TwosComplementOps-absOption-test.scala">extension-methods/TwosComplementOps-absOption-test.scala</a>
+
+  import TwosComplementOps.absOption
+  88.absOption // Some(88)
+
+<hr>
+  </pre>
+  <h3><a name="sec7"></a>22.7 Conclusion</h3>
+
+
+ <table>
+ <tr valign="top">
+ <td>
+ <div id="moreinfo">
+ <p>
+ For more information about <em>Programming in Scala, Fifth Edition</em> (the "Stairway Book"), please visit:
+ </p>
+ 
+ <p>
+ <a href="http://www.artima.com/shop/programming_in_scala_5ed">http://www.artima.com/shop/programming_in_scala_5ed</a>
+ </p>
+ 
+ <p>
+ and:
+ </p>
+ 
+ <p>
+ <a href="http://booksites.artima.com/programming_in_scala_5ed">http://booksites.artima.com/programming_in_scala_5ed</a>
+ </p>
+ </div>
+ </td>
+ <td>
+ <div id="license">
+ <p>
+   Copyright &copy; 2007-2020 Artima, Inc. All rights reserved.
+ </p>
+
+ <p>
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ </p>
+
+ <p style="margin-left: 20px">
+   <a href="http://www.apache.org/licenses/LICENSE-2.0">
+     http://www.apache.org/licenses/LICENSE-2.0
+   </a>
+ </p>
+
+ <p>
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ </p>
+ </div>
+ </td>
+ </tr>
+ </table>
+
+</body>
+</html>

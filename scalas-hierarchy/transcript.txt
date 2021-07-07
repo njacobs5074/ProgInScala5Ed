@@ -1,0 +1,128 @@
+/*
+ * Copyright (C) 2007-2020 Artima, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Automatically generated Scala interpreter transcript from:
+ *
+ * Programming in Scala (Fifth Edition)
+ * by Martin Odersky, Lex Spoon, Bill Venners, and Frank Sommers
+ *
+ * http://booksites.artima.com/programming_in_scala_5ed
+ */
+
+
+scala> new Int
+       ^
+       error: class Int is abstract; cannot be instantiated
+
+scala> val i: Int = null
+                    ^
+       error: an expression of type Null is ineligible for implicit conversion
+
+scala>    class Dollars(val amount: Int) extends AnyVal:
+           override def toString = "\$" + amount
+
+                                                       ^
+       error: ';' expected but ':' found.
+
+scala>   class SwissFrancs(val amount: Int) extends AnyVal:
+           override def toString = s"$amount CHF"
+
+                                                          ^
+       error: ';' expected but ':' found.
+
+scala> val dollars: Dollars = new SwissFrancs(1000)
+                    ^
+       error: not found: type Dollars
+                                  ^
+       error: not found: type SwissFrancs
+
+scala>   def title(text: String, anchor: String, style: String): String =
+           s"<a id='\$anchor'><h1 class='\$style'>\$text</h1></a>"
+
+title: (text: String, anchor: String, style: String)String
+
+scala> title("chap:vcls", "bold", "Value Classes")
+res1: String = <a id='bold'><h1 class='Value Classes'>chap:vcls</h1></a>
+
+scala>   class Anchor(val value: String) extends AnyVal
+         class Style(val value: String) extends AnyVal
+         class Text(val value: String) extends AnyVal
+         class Html(val value: String) extends AnyVal
+
+defined class Anchor
+defined class Style
+defined class Text
+defined class Html
+
+scala>   def title(text: Text, anchor: Anchor, style: Style): Html =
+           Html(
+             s"<a id='\${anchor.value}'>" +
+                 s"<h1 class='\${style.value}'>" +
+                 text.value +
+                 "</h1></a>"
+           )
+
+                  Html(
+                      ^
+On line 2: error: Html.type does not take parameters
+
+scala> title(Anchor("chap:vcls"), Style("bold"),
+           Text("Value Classes"))
+             ^
+       error: not found: value Anchor
+                                  ^
+       error: not found: value Style
+           Text("Value Classes"))
+           ^
+On line 2: error: not found: value Text
+
+scala> val q = new BasicIntQueue with
+
+scala> val q = new BasicIntQueue with
+             Incrementing with Filtering
+                   ^
+       error: not found: type BasicIntQueue
+             Incrementing with Filtering
+             ^
+On line 2: error: not found: type Incrementing
+             Incrementing with Filtering
+                               ^
+On line 2: error: not found: type Filtering
+
+scala> val q = new BasicIntQueue with
+             Incrementing with Filtering
+                   ^
+       error: not found: type BasicIntQueue
+             Incrementing with Filtering
+             ^
+On line 2: error: not found: type Incrementing
+             Incrementing with Filtering
+                               ^
+On line 2: error: not found: type Filtering
+
+scala> val q: BasicIntQueue & Incrementing & Filtering =
+           new BasicIntQueue with Incrementing with Filtering
+                                           ^
+       error: not found: type &
+           new BasicIntQueue with Incrementing with Filtering
+               ^
+On line 2: error: not found: type BasicIntQueue
+           new BasicIntQueue with Incrementing with Filtering
+                                  ^
+On line 2: error: not found: type Incrementing
+           new BasicIntQueue with Incrementing with Filtering
+                                                    ^
+On line 2: error: not found: type Filtering
+

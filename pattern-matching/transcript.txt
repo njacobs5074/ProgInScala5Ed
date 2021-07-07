@@ -1,0 +1,272 @@
+/*
+ * Copyright (C) 2007-2020 Artima, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Automatically generated Scala interpreter transcript from:
+ *
+ * Programming in Scala (Fifth Edition)
+ * by Martin Odersky, Lex Spoon, Bill Venners, and Frank Sommers
+ *
+ * http://booksites.artima.com/programming_in_scala_5ed
+ */
+
+
+scala>   trait Expr
+           case class Var(name: String) extends Expr
+         case class Num(number: Double) extends Expr
+         case class UnOp(operator: String, arg: Expr) extends Expr
+         case class BinOp(operator: String, 
+             left: Expr, right: Expr) extends Expr
+
+defined trait Expr
+defined class Var
+defined class Num
+defined class UnOp
+defined class BinOp
+
+scala>   def simplifyTop(expr: Expr): Expr =
+           expr match
+             case UnOp("-", UnOp("-", e))  => e // Double negation
+             case BinOp("+", e, Num(0)) => e // Adding zero
+             case BinOp("*", e, Num(1)) => e // Multiplying by one
+             case _ => expr
+
+                    case UnOp("-", UnOp("-", e))  => e // Double negation
+                    ^
+On line 3: error: '{' expected but 'case' found.
+                    case BinOp("+", e, Num(0)) => e // Adding zero
+                    ^
+On line 4: error: illegal start of definition
+                    case BinOp("*", e, Num(1)) => e // Multiplying by one
+                    ^
+On line 5: error: illegal start of definition
+                    case _ => expr
+                    ^
+On line 6: error: illegal start of definition
+
+scala> simplifyTop(UnOp("-", UnOp("-", Var("x"))))
+       ^
+       error: not found: value simplifyTop
+
+scala>   def describe(x: Any) =
+           x match
+             case 5 => "five"
+             case true => "truth"
+             case "hello" => "hi!"
+             case Nil => "the empty list"
+             case _ => "something else"
+
+                    case 5 => "five"
+                    ^
+On line 3: error: '{' expected but 'case' found.
+                    case true => "truth"
+                    ^
+On line 4: error: illegal start of definition
+                    case "hello" => "hi!"
+                    ^
+On line 5: error: illegal start of definition
+                    case Nil => "the empty list"
+                    ^
+On line 6: error: illegal start of definition
+                    case _ => "something else"
+                    ^
+On line 7: error: illegal start of definition
+
+scala> import math.{E, Pi}
+import math.{E, Pi}
+
+scala> E match
+         case Pi => s"strange math? Pi = $Pi"
+         case _ => "OK"
+         case Pi => s"strange math? Pi = $Pi"
+         ^
+On line 2: error: '{' expected but 'case' found.
+         case _ => "OK"
+         ^
+On line 3: error: illegal start of definition
+
+scala> val pi = math.Pi
+pi: Double = 3.141592653589793
+
+scala> E match
+         case pi => s"strange math? Pi = $pi"
+         case pi => s"strange math? Pi = $pi"
+         ^
+On line 2: error: '{' expected but 'case' found.
+
+scala> E match
+         case pi => s"strange math? Pi = $pi"
+         case _ => "OK"  
+         case pi => s"strange math? Pi = $pi"
+         ^
+On line 2: error: '{' expected but 'case' found.
+         case _ => "OK"
+         ^
+On line 3: error: illegal start of definition
+
+scala> E match
+         case `pi` => s"strange math? Pi = $pi"
+         case _ => "OK"
+         case `pi` => s"strange math? Pi = $pi"
+         ^
+On line 2: error: '{' expected but 'case' found.
+         case _ => "OK"
+         ^
+On line 3: error: illegal start of definition
+
+scala>   def tupleDemo(obj: Any) =
+           obj match
+             case (a, b, c) => s"matched $a$b$c"
+             case _ => ""
+
+                    case (a, b, c) => s"matched $a$b$c"
+                    ^
+On line 3: error: '{' expected but 'case' found.
+                    case _ => ""
+                    ^
+On line 4: error: illegal start of definition
+
+scala>   def generalSize(x: Any) =
+           x match
+             case s: String => s.length
+             case m: Map[_, _] => m.size
+             case _ => -1
+
+                    case s: String => s.length
+                    ^
+On line 3: error: '{' expected but 'case' found.
+                    case m: Map[_, _] => m.size
+                    ^
+On line 4: error: illegal start of definition
+                    case _ => -1
+                    ^
+On line 5: error: illegal start of definition
+
+scala> 3: String // ': String' is the type ascription
+       ^
+       error: type mismatch;
+        found   : Int(3)
+        required: String
+
+scala> Var("x"): Expr // Expr is a supertype of Var
+res2: Expr = Var(x)
+
+scala> 3: Long
+res3: Long = 3
+
+scala> def isIntIntMap(x: Any) =
+         x match
+           case m: Map[Int, Int] => true
+           case _ => false
+       
+           case m: Map[Int, Int] => true
+           ^
+On line 3: error: '{' expected but 'case' found.
+           case _ => false
+           ^
+On line 4: error: illegal start of definition
+
+scala> def simplifyAdd(e: Expr) =
+         e match
+           case BinOp("+", x, x) => BinOp("*", x, Num(2))
+           case _ => e
+       
+           case BinOp("+", x, x) => BinOp("*", x, Num(2))
+           ^
+On line 3: error: '{' expected but 'case' found.
+           case _ => e
+           ^
+On line 4: error: illegal start of definition
+
+scala> def simplifyBad(expr: Expr): Expr =                                      
+         expr match
+           case UnOp(op, e) => UnOp(op, simplifyBad(e))
+           case UnOp("-", UnOp("-", e)) => e
+           case _ => expr
+       
+           case UnOp(op, e) => UnOp(op, simplifyBad(e))
+           ^
+On line 3: error: '{' expected but 'case' found.
+           case UnOp("-", UnOp("-", e)) => e
+           ^
+On line 4: error: illegal start of definition
+           case _ => expr
+           ^
+On line 5: error: illegal start of definition
+
+scala>     sealed trait Expr
+         case class Var(name: String) extends Expr
+         case class Num(number: Double) extends Expr
+         case class UnOp(operator: String, arg: Expr) extends Expr
+         case class BinOp(operator: String, 
+             left: Expr, right: Expr) extends Expr
+
+defined trait Expr
+defined class Var
+defined class Num
+defined class UnOp
+defined class BinOp
+
+scala>   def describe(e: Expr): String = 
+           e match
+             case Num(_) => "a number"
+             case Var(_) => "a variable"
+
+                    case Num(_) => "a number"
+                    ^
+On line 3: error: '{' expected but 'case' found.
+                    case Var(_) => "a variable"
+                    ^
+On line 4: error: illegal start of definition
+
+scala> val myTuple = (123, "abc")
+myTuple: (Int, String) = (123,abc)
+
+scala> val (number, string) = myTuple
+number: Int = 123
+string: String = abc
+
+scala> val exp = new BinOp("*", Num(5), Num(1))
+exp: BinOp = BinOp(*,Num(5.0),Num(1.0))
+
+scala> val BinOp(op, left, right) = exp
+op: String = *
+left: Expr = Num(5.0)
+right: Expr = Num(1.0)
+
+scala>   val withDefault: Option[Int] => Int =
+           case Some(x) => x
+           case None => 0
+
+                  case Some(x) => x
+                  ^
+On line 2: error: illegal start of simple expression
+                  case None => 0
+                  ^
+On line 3: error: illegal start of definition
+
+scala>   val second: List[Int] => Int =
+           case x :: y :: _ => y
+
+                  case x :: y :: _ => y
+                  ^
+On line 2: error: illegal start of simple expression
+
+scala>   val second: PartialFunction[List[Int],Int] =
+           case x :: y :: _ => y
+
+                  case x :: y :: _ => y
+                  ^
+On line 2: error: illegal start of simple expression
+

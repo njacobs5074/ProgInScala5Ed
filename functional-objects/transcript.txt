@@ -1,0 +1,196 @@
+/*
+ * Copyright (C) 2007-2020 Artima, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Automatically generated Scala interpreter transcript from:
+ *
+ * Programming in Scala (Fifth Edition)
+ * by Martin Odersky, Lex Spoon, Bill Venners, and Frank Sommers
+ *
+ * http://booksites.artima.com/programming_in_scala_5ed
+ */
+
+
+scala>   class Rational(n: Int, d: Int):
+           println("Created " + n + "/" + d)
+
+                                       ^
+       error: ';' expected but ':' found.
+
+scala> new Rational(1, 2)
+           ^
+       error: not found: type Rational
+
+scala> Rational(1, 2)
+       ^
+       error: not found: value Rational
+
+scala>   class Rational(n: Int, d: Int):
+           override def toString = s"$n/$d"
+
+                                       ^
+       error: ';' expected but ':' found.
+
+scala> val x = Rational(1, 3)
+               ^
+       error: not found: value Rational
+
+scala> val y = Rational(5, 7)
+               ^
+       error: not found: value Rational
+
+scala> Rational(5, 0) // 5/0
+       ^
+       error: not found: value Rational
+
+scala>   class Rational(n: Int, d: Int):
+           require(d != 0)
+           val numer: Int = n
+           val denom: Int = d
+           override def toString = s"$numer/$denom"
+           def add(that: Rational): Rational =
+             Rational(
+               numer * that.denom + that.numer * denom,
+               denom * that.denom
+             )
+
+                                       ^
+       error: ';' expected but ':' found.
+
+scala>   class Rational(n: Int, d: Int):
+       
+           require(d != 0)
+       
+           private val g = gcd(n.abs, d.abs)
+           val numer = n / g
+           val denom = d / g
+       
+           def this(n: Int) = this(n, 1)
+       
+           def add(that: Rational): Rational =
+             Rational(
+               numer * that.denom + that.numer * denom,
+               denom * that.denom
+             )
+       
+           override def toString = s"$numer/$denom"
+       
+           private def gcd(a: Int, b: Int): Int = 
+             if b == 0 then a else gcd(b, a % b)
+
+                                       ^
+       error: ';' expected but ':' found.
+                    if b == 0 then a else gcd(b, a % b)
+                       ^
+On line 20: error: '(' expected but identifier found.
+                    if b == 0 then a else gcd(b, a % b)
+                              ^
+On line 20: warning: then is a reserved word (since 2.10.0); usage as an identifier is deprecated
+
+scala>   class Rational(n: Int, d: Int):
+       
+           require(d != 0)
+       
+           private val g = gcd(n.abs, d.abs)
+           val numer = n / g
+           val denom = d / g
+       
+           def this(n: Int) = this(n, 1)
+       
+           def + (that: Rational): Rational =
+             Rational(
+               numer * that.denom + that.numer * denom,
+               denom * that.denom
+             )
+       
+           def * (that: Rational): Rational =
+             Rational(numer * that.numer, denom * that.denom)
+       
+           override def toString = s"$numer/$denom"
+       
+           private def gcd(a: Int, b: Int): Int = 
+             if b == 0 then a else gcd(b, a % b)
+
+                                       ^
+       error: ';' expected but ':' found.
+                    if b == 0 then a else gcd(b, a % b)
+                       ^
+On line 23: error: '(' expected but identifier found.
+                    if b == 0 then a else gcd(b, a % b)
+                              ^
+On line 23: warning: then is a reserved word (since 2.10.0); usage as an identifier is deprecated
+
+scala>   class Rational(n: Int, d: Int):
+       
+
+            require(d != 0)
+       
+           private val g = gcd(n.abs, d.abs)
+           val numer = n / g
+           val denom = d / g
+       
+           def this(n: Int) = this(n, 1)
+       
+           def + (that: Rational): Rational =
+             Rational(
+               numer * that.denom + that.numer * denom,
+               denom * that.denom
+             )
+       
+           def + (i: Int): Rational =
+             Rational(numer + i * denom, denom)
+       
+           def - (that: Rational): Rational =
+             Rational(
+               numer * that.denom - that.numer * denom,
+               denom * that.denom
+             )
+       
+           def - (i: Int): Rational =
+             Rational(numer - i * denom, denom)
+       
+           def * (that: Rational): Rational =
+             Rational(numer * that.numer, denom * that.denom)
+       
+           def * (i: Int): Rational =
+             Rational(numer * i, denom)
+       
+           def / (that: Rational): Rational =
+             Rational(numer * that.denom, denom * that.numer)
+       
+           def / (i: Int): Rational =
+             Rational(numer, denom * i)
+       
+           override def toString = s"$numer/$denom"
+       
+           private def gcd(a: Int, b: Int): Int = 
+             if b == 0 then a else gcd(b, a % b)
+
+       }
+                                       ^
+       error: ';' expected but ':' found.
+                    if b == 0 then a else gcd(b, a % b)
+                       ^
+On line 45: error: '(' expected but identifier found.
+                    if b == 0 then a else gcd(b, a % b)
+                              ^
+On line 45: warning: then is a reserved word (since 2.10.0); usage as an identifier is deprecated
+       }
+       ^
+On line 47: error: illegal start of simple expression
+
+scala> 2 * r
+           ^
+       error: not found: value r
+

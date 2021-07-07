@@ -1,0 +1,330 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/2002/REC-xhtml1-20020801/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO-8859-1" />
+  <title>Code Examples for Programming in Scala, Fifth Edition</title>
+  <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div id="mainTitles"><h3>Code Examples for</h3><h2>Programming in Scala, Fifth Edition</h2></div>  <p><a href="../index.html">
+    Return to chapter index
+  </a></p>
+  <h2>11 Traits</h2>
+
+  <p><a href="../traits/transcript.txt">
+    Sample run of chapter's interpreter examples
+  </a></p>
+
+  <ul>
+
+    <li>11.1 <a href="#sec1">How traits work</a></li>
+    <li>11.2 <a href="#sec2">Thin versus rich interfaces</a></li>
+    <li>11.3 <a href="#sec3">Traits as stackable modifications</a></li>
+    <li>11.4 <a href="#sec4">Why not multiple inheritance?</a></li>
+    <li>11.5 <a href="#sec5">Trait parameters</a></li>
+    <li>11.6 <a href="#sec6">Conclusion</a></li>
+  </ul>
+
+  <h3><a name="sec1"></a>11.1 How traits work</h3>
+
+  <pre><hr>
+// In file <a href="../traits/Philosophical.scala">traits/Philosophical.scala</a>
+
+  trait Philosophical:
+    def philosophize = "I consume memory, therefore I am!"
+
+<hr>
+  class Frog extends Philosophical:
+    override def toString = "green"
+
+<hr>
+  val frog = new Frog
+  frog.philosophize   // I consume memory, therefore I am!
+
+<hr>
+  val phil: Philosophical = frog
+  phil.philosophize   // I consume memory, therefore I am!
+
+<hr>
+// In file <a href="../traits/Ex1.scala">traits/Ex1.scala</a>
+
+  class Animal
+
+  class Frog extends Animal, Philosophical:
+    override def toString = "green"
+
+<hr>
+// In file <a href="../traits/Frog.scala">traits/Frog.scala</a>
+
+  class Animal
+  trait HasLegs
+
+  class Frog extends Animal, Philosophical, HasLegs:
+    override def toString = "green"
+
+<hr>
+// In file <a href="../traits/Ex2.scala">traits/Ex2.scala</a>
+
+  class Animal
+
+  class Frog extends Animal, Philosophical:
+    override def toString = "green"
+    override def philosophize = s"It ain't easy being $this!"
+
+<hr>
+  val phrog: Philosophical = new Frog
+  phrog.philosophize   // It ain't easy being green!
+
+<hr>
+  </pre>
+  <h3><a name="sec2"></a>11.2 Thin versus rich interfaces</h3>
+
+  <pre><hr>
+  class Rational(n: Int, d: Int):
+    // ...
+    def &lt; (that: Rational) =
+      this.numer * that.denom &lt; that.numer * this.denom
+    def &gt; (that: Rational) = that &lt; this
+    def &lt;= (that: Rational) = (this &lt; that) || (this == that)
+    def &gt;= (that: Rational) = (this &gt; that) || (this == that)
+
+<hr>
+// In file <a href="../traits/Rational.scala">traits/Rational.scala</a>
+
+  class Rational(n: Int, d: Int) extends Ordered[Rational]:
+    // ...
+    def compare(that: Rational) =
+      (this.numer * that.denom) - (that.numer * this.denom)
+  
+
+<hr>
+  val half = new Rational(1, 2)
+  val third = new Rational(1, 3)
+  half &lt; third   // false
+  half &gt; third   // true
+
+<hr>
+// In file <a href="../traits/Ex2.scala">traits/Ex2.scala</a>
+
+  trait Ordered[T]:
+    def compare(that: T): Int
+
+    def &lt;(that: T): Boolean = (this compare that) &lt; 0
+    def &gt;(that: T): Boolean = (this compare that) &gt; 0
+    def &lt;=(that: T): Boolean = (this compare that) &lt;= 0
+    def &gt;=(that: T): Boolean = (this compare that) &gt;= 0
+
+<hr>
+  </pre>
+  <h3><a name="sec3"></a>11.3 Traits as stackable modifications</h3>
+
+  <pre><hr>
+// In file <a href="../traits/IntQueue.scala">traits/IntQueue.scala</a>
+
+  abstract class IntQueue:
+    def get(): Int
+    def put(x: Int): Unit
+
+<hr>
+// In file <a href="../traits/BasicIntQueue.scala">traits/BasicIntQueue.scala</a>
+
+  import scala.collection.mutable.ArrayBuffer
+
+  class BasicIntQueue extends IntQueue:
+    private val buf = ArrayBuffer.empty[Int]
+    def get() = buf.remove(0)
+    def put(x: Int) = buf += x
+
+<hr>
+  val queue = new BasicIntQueue
+  queue.put(10)
+  queue.put(20)
+  queue.get()   // 10
+  queue.get()   // 20
+
+<hr>
+// In file <a href="../traits/Doubling.scala">traits/Doubling.scala</a>
+
+  trait Doubling extends IntQueue:
+    abstract override def put(x: Int) = super.put(2 * x)
+
+<hr>
+  class MyQueue extends BasicIntQueue, Doubling
+  val queue = new MyQueue
+  queue.put(10)
+  queue.get()   // 20
+
+<hr>
+  val queue = new BasicIntQueue with Doubling
+  queue.put(10)
+  queue.get()   // 20
+
+<hr>
+// In file <a href="../traits/Incrementing.scala">traits/Incrementing.scala</a>
+
+  trait Incrementing extends IntQueue:
+    abstract override def put(x: Int) = super.put(x + 1)
+
+  trait Filtering extends IntQueue:
+    abstract override def put(x: Int) =
+      if x &gt;= 0 then super.put(x)
+
+<hr>
+  val queue = new BasicIntQueue with Incrementing with Filtering
+  queue.put(-1)
+  queue.put(0)
+  queue.put(1)
+  queue.get()   // 1
+  queue.get()   // 2
+
+<hr>
+  val queue = new BasicIntQueue with
+        Filtering with Incrementing
+  queue.put(-1)
+  queue.put(0)
+  queue.put(1)
+  queue.get()   // 0
+  queue.get()   // 1
+  queue.get()   // 2
+
+<hr>
+  </pre>
+  <h3><a name="sec4"></a>11.4 Why not multiple inheritance?</h3>
+
+  <pre><hr>
+// In file <a href="../traits/Ex2.scala">traits/Ex2.scala</a>
+
+  // Multiple inheritance thought experiment
+  val q = new BasicIntQueue with Incrementing with Doubling
+  q.put(42)  // which put would be called?
+
+<hr>
+  // Multiple inheritance thought experiment
+  trait MyQueue extends BasicIntQueue,
+      Incrementing, Doubling:
+
+    def put(x: Int) =
+      super[Incrementing].put(x) // (this is rarely used,
+      super[Doubling].put(x)     // but valid Scala)
+
+<hr>
+// In file <a href="../traits/Ex3.scala">traits/Ex3.scala</a>
+
+  class Animal
+  trait Furry extends Animal
+  trait HasLegs extends Animal
+  trait FourLegged extends HasLegs
+  class Cat extends Animal, Furry, FourLegged
+
+<hr>
+  </pre>
+  <h3><a name="sec5"></a>11.5 Trait parameters</h3>
+
+  <pre><hr>
+  trait Philosophical(message: String):
+    def philosophize = message
+
+<hr>
+  class Frog extends Animal,
+      Philosophical("I croak, therefore I am!")
+
+  class Duck extends Animal,
+      Philosophical("I quack, therefore I am!")
+
+<hr>
+  val frog = new Frog
+  frog.philosophize   // I croak, therefore I am!
+  val duck = new Duck
+  duck.philosophize   // I quack, therefore I am!
+
+<hr>
+  class ProfoundAnimal extends Animal,
+    Philosophical("In the beginning was the deed.")
+
+<hr>
+  class Frog extends ProfoundAnimal, Philosophical
+
+<hr>
+  val frog = new Frog
+  frog.philosophize   // In the beginning was the deed.
+
+<hr>
+  trait PhilosophicalAnimal extends Animal with Philosophical
+
+<hr>
+  // Does not compile
+  class Frog extends PhilosophicalAnimal(
+      "I croak, therefore I am!")
+
+<hr>
+  class Frog extends
+      Philosophical("I croak, therefore I am!"),
+      PhilosophicalAnimal
+
+<hr>
+  class Frog extends PhilosophicalAnimal,
+      Philosophical("I croak, therefore I am!")
+
+<hr>
+  </pre>
+  <h3><a name="sec6"></a>11.6 Conclusion</h3>
+
+
+ <table>
+ <tr valign="top">
+ <td>
+ <div id="moreinfo">
+ <p>
+ For more information about <em>Programming in Scala, Fifth Edition</em> (the "Stairway Book"), please visit:
+ </p>
+ 
+ <p>
+ <a href="http://www.artima.com/shop/programming_in_scala_5ed">http://www.artima.com/shop/programming_in_scala_5ed</a>
+ </p>
+ 
+ <p>
+ and:
+ </p>
+ 
+ <p>
+ <a href="http://booksites.artima.com/programming_in_scala_5ed">http://booksites.artima.com/programming_in_scala_5ed</a>
+ </p>
+ </div>
+ </td>
+ <td>
+ <div id="license">
+ <p>
+   Copyright &copy; 2007-2020 Artima, Inc. All rights reserved.
+ </p>
+
+ <p>
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ </p>
+
+ <p style="margin-left: 20px">
+   <a href="http://www.apache.org/licenses/LICENSE-2.0">
+     http://www.apache.org/licenses/LICENSE-2.0
+   </a>
+ </p>
+
+ <p>
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ </p>
+ </div>
+ </td>
+ </tr>
+ </table>
+
+</body>
+</html>

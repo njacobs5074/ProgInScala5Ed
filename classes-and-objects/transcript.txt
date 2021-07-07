@@ -1,0 +1,84 @@
+/*
+ * Copyright (C) 2007-2020 Artima, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Automatically generated Scala interpreter transcript from:
+ *
+ * Programming in Scala (Fifth Edition)
+ * by Martin Odersky, Lex Spoon, Bill Venners, and Frank Sommers
+ *
+ * http://booksites.artima.com/programming_in_scala_5ed
+ */
+
+
+scala>   // In file ChecksumAccumulator.scala
+         class ChecksumAccumulator:
+           private var sum = 0
+           def add(b: Byte): Unit = sum += b
+           def checksum(): Int = ~(sum & 0xFF) + 1
+
+                class ChecksumAccumulator:
+                                         ^
+On line 2: error: ';' expected but ':' found.
+
+scala>   // In file ChecksumAccumulator.scala
+         import scala.collection.mutable
+       
+         object ChecksumAccumulator:
+       
+           private val cache = mutable.Map.empty[String, Int]
+       
+           def calculate(s: String): Int = 
+             if cache.contains(s) then
+               cache(s)
+             else
+               val acc = new ChecksumAccumulator
+               for c <- s do
+                 acc.add((c >> 8).toByte)
+                 acc.add(c.toByte)
+               val cs = acc.checksum()
+               cache += (s -> cs)
+               cs
+
+                object ChecksumAccumulator:
+                                          ^
+On line 4: error: ';' expected but ':' found.
+                    if cache.contains(s) then
+                       ^
+On line 9: error: '(' expected but identifier found.
+                    if cache.contains(s) then
+                                         ^
+On line 9: warning: then is a reserved word (since 2.10.0); usage as an identifier is deprecated
+                      val acc = new ChecksumAccumulator
+                      ^
+On line 12: error: illegal start of simple expression
+                      for c <- s do
+                          ^
+On line 13: error: '(' expected but identifier found.
+
+scala>   import ChecksumAccumulator.calculate
+       
+         object Summer:
+           def main(args: Array[String]): Unit =
+             for arg <- args do
+               println(arg + ": " + calculate(arg))
+
+                object Summer:
+                             ^
+On line 3: error: ';' expected but ':' found.
+
+scala> Summer.main(Array("of", "love"))
+       ^
+       error: not found: value Summer
+

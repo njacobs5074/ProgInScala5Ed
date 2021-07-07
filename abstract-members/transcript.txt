@@ -1,0 +1,285 @@
+/*
+ * Copyright (C) 2007-2020 Artima, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Automatically generated Scala interpreter transcript from:
+ *
+ * Programming in Scala (Fifth Edition)
+ * by Martin Odersky, Lex Spoon, Bill Venners, and Frank Sommers
+ *
+ * http://booksites.artima.com/programming_in_scala_5ed
+ */
+
+
+scala>   trait RationalTrait:
+           val numerArg: Int
+           val denomArg: Int
+           require(denomArg != 0)
+           private val g = gcd(numerArg, denomArg)
+           val numer = numerArg / g
+           val denom = denomArg / g
+           private def gcd(a: Int, b: Int): Int = 
+             if (b == 0) a else gcd(b, a % b)
+           override def toString = s"$numer/$denom"
+
+                            ^
+       error: ';' expected but ':' found.
+
+scala> val x = 2
+x: Int = 2
+
+scala> new RationalTrait:
+         val numerArg = 1 * x
+         val denomArg = 2 * x
+         val numerArg = 1 * x
+         ^
+On line 2: error: identifier expected but 'val' found.
+
+scala> new RationalTrait(1 * x, 2 * x) {}
+           ^
+       error: not found: type RationalTrait
+
+scala> Demo
+       ^
+       error: not found: value Demo
+
+scala> Demo.x
+       ^
+       error: not found: value Demo
+
+scala> Demo
+       ^
+       error: not found: value Demo
+
+scala> Demo.x
+       ^
+       error: not found: value Demo
+
+scala>   trait LazyRationalTrait:
+       
+           val numerArg: Int 
+           val denomArg: Int 
+       
+           lazy val numer = numerArg / g
+           lazy val denom = denomArg / g
+       
+           override def toString = s"$numer/$denom"
+       
+           private lazy val g =
+             require(denomArg != 0)
+             gcd(numerArg, denomArg)
+       
+           private def gcd(a: Int, b: Int): Int = 
+             if b == 0 then a else gcd(b, a % b)
+
+                                ^
+       error: ';' expected but ':' found.
+                    if b == 0 then a else gcd(b, a % b)
+                       ^
+On line 16: error: '(' expected but identifier found.
+                    if b == 0 then a else gcd(b, a % b)
+                              ^
+On line 16: warning: then is a reserved word (since 2.10.0); usage as an identifier is deprecated
+
+scala> val x = 2
+x: Int = 2
+
+scala> new LazyRationalTrait:
+         val numerArg = 1 * x
+         val denomArg = 2 * x
+         val numerArg = 1 * x
+         ^
+On line 2: error: identifier expected but 'val' found.
+
+scala>   class Food
+         abstract class Animal:
+           type SuitableFood <: Food
+           def eat(food: SuitableFood): Unit
+
+         class Grass extends Food
+         class Cow extends Animal:
+           type SuitableFood = Grass
+           override def eat(food: Grass) = {}
+
+                abstract class Animal:
+                                     ^
+On line 2: error: ';' expected but ':' found.
+                class Cow extends Animal:
+                                        ^
+On line 7: error: ';' expected but ':' found.
+
+scala> bessy.eat(new Fish)
+       ^
+       error: not found: value bessy
+                     ^
+       error: not found: type Fish
+
+scala>   class DogFood extends Food
+         class Dog extends Animal:
+           type SuitableFood = DogFood
+           override def eat(food: DogFood) = {}
+
+                class Dog extends Animal:
+                                        ^
+On line 2: error: ';' expected but ':' found.
+
+scala> lassie.eat(new bessy.SuitableFood)
+       ^
+       error: not found: value lassie
+                      ^
+       error: not found: value bessy
+
+scala>   class Outer:
+           class Inner
+
+                    ^
+       error: ';' expected but ':' found.
+
+scala>   val o1 = new Outer
+         val o2 = new Outer
+
+                      ^
+       error: not found: type Outer
+                val o2 = new Outer
+                             ^
+On line 2: error: not found: type Outer
+
+scala> new Outer#Inner
+           ^
+       error: not found: type Outer
+
+scala>   abstract class CurrencyZone:
+           type Currency <: AbstractCurrency
+           def make(x: Long): Currency
+           abstract class AbstractCurrency:
+             val amount: Long
+             def designation: String 
+             def + (that: Currency): Currency = 
+               make(this.amount + that.amount)
+             def * (x: Double): Currency = 
+               make((this.amount * x).toLong)
+
+            def from(other: CurrencyZone#AbstractCurrency): Currency = 
+           make(math.round(
+             other.amount.toDouble * Converter.exchangeRate
+               (other.designation)(this.designation)))
+
+            private def decimals(n: Long): Int = 
+           if n == 1 then 0 else 1 + decimals(n / 10)
+
+            override def toString = 
+           ((amount.toDouble / CurrencyUnit.amount.toDouble)
+             .formatted(s"%.${decimals(CurrencyUnit.amount)}f")
+             + " " + designation)
+
+         }
+         val CurrencyUnit: Currency
+       }
+         object US extends CurrencyZone:
+           abstract class Dollar extends AbstractCurrency:
+             def designation = "USD"
+           type Currency = Dollar
+           def make(cents: Long) =
+             new Dollar:
+               val amount = cents
+           val Cent = make(1)
+           val Dollar = make(100)
+           val CurrencyUnit = Dollar
+
+         object Europe extends CurrencyZone:
+           abstract class Euro extends AbstractCurrency:
+             def designation = "EUR"
+       
+           type Currency = Euro
+           def make(cents: Long) =
+             new Euro:
+               val amount = cents
+       
+           val Cent = make(1)
+           val Euro = make(100)
+           val CurrencyUnit = Euro
+       
+         object Japan extends CurrencyZone:
+           abstract class Yen extends AbstractCurrency:
+             def designation = "JPY"
+       
+           type Currency = Yen
+           def make(yen: Long) =
+             new Yen:
+               val amount = yen
+       
+           val Yen = make(1)
+           val CurrencyUnit = Yen
+
+         object Converter:
+           var exchangeRate =
+             Map(
+               "USD" -> Map("USD" -> 1.0, "EUR" -> 0.8498,
+                          "JPY" -> 1.047, "CHF" -> 0.9149),
+               "EUR" -> Map("USD" -> 1.177, "EUR" -> 1.0,
+                          "JPY" -> 1.232, "CHF" -> 1.0765),
+               "JPY" -> Map("USD" -> 0.9554, "EUR" -> 0.8121,
+                          "JPY" -> 1.0, "CHF" -> 0.8742),
+               "CHF" -> Map("USD" -> 1.093, "EUR" -> 0.9289,
+                          "JPY" -> 1.144, "CHF" -> 1.0)
+             )
+
+                                    ^
+       error: ';' expected but ':' found.
+                  abstract class AbstractCurrency:
+                                                 ^
+On line 4: error: ';' expected but ':' found.
+                  if n == 1 then 0 else 1 + decimals(n / 10)
+                     ^
+On line 18: error: '(' expected but identifier found.
+                  if n == 1 then 0 else 1 + decimals(n / 10)
+                            ^
+On line 18: warning: then is a reserved word (since 2.10.0); usage as an identifier is deprecated
+            override def toString =
+            ^
+On line 20: error: illegal start of simple expression
+         }
+         ^
+On line 25: error: eof expected but '}' found.
+
+scala> val yen = Japan.Yen.from(US.Dollar * 100)
+                 ^
+       error: not found: value Japan
+                                ^
+       error: not found: value US
+
+scala> val euros = Europe.Euro.from(yen)
+                   ^
+       error: not found: value Europe
+                                    ^
+       error: not found: value yen
+
+scala> val dollars = US.Dollar.from(euros)
+                     ^
+       error: not found: value US
+                                    ^
+       error: not found: value euros
+
+scala> US.Dollar * 100 + dollars
+       ^
+       error: not found: value US
+                         ^
+       error: not found: value dollars
+
+scala> US.Dollar + Europe.Euro
+       ^
+       error: not found: value US
+                   ^
+       error: not found: value Europe
+

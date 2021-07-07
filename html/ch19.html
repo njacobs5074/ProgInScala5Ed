@@ -1,0 +1,339 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/2002/REC-xhtml1-20020801/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO-8859-1" />
+  <title>Code Examples for Programming in Scala, Fifth Edition</title>
+  <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div id="mainTitles"><h3>Code Examples for</h3><h2>Programming in Scala, Fifth Edition</h2></div>  <p><a href="../index.html">
+    Return to chapter index
+  </a></p>
+  <h2>19 Enums</h2>
+
+  <p><a href="../enums-and-adts/transcript.txt">
+    Sample run of chapter's interpreter examples
+  </a></p>
+
+  <ul>
+
+    <li>19.1 <a href="#sec1">Enumerated data types</a></li>
+    <li>19.2 <a href="#sec2">Algebraic data types</a></li>
+    <li>19.3 <a href="#sec3">Generalized ADTs</a></li>
+    <li>19.4 <a href="#sec4">What makes ADTs algebraic</a></li>
+    <li>19.5 <a href="#sec5">Conclusion</a></li>
+  </ul>
+
+  <h3><a name="sec1"></a>19.1 Enumerated data types</h3>
+
+  <pre><hr>
+// In file <a href="../enums-and-adts/direction-1.scala">enums-and-adts/direction-1.scala</a>
+
+enum Direction:
+  case North, East, South, West
+
+<hr>
+// In file <a href="../enums-and-adts/invert.scala">enums-and-adts/invert.scala</a>
+
+  import Direction.{North, South, East, West}
+
+  def invert(dir: Direction): Direction =
+    dir match
+      case North =&gt; South
+      case East =&gt; West
+      case South =&gt; North
+      case West =&gt; East
+
+<hr>
+// In file <a href="../enums-and-adts/invert.scala">enums-and-adts/invert.scala</a>
+
+  invert(North) // South
+  invert(East)  // West
+
+<hr>
+// In file <a href="../enums-and-adts/direction-1.scala">enums-and-adts/direction-1.scala</a>
+
+  North.ordinal // 0
+  East.ordinal  // 1
+  South.ordinal // 2
+  West.ordinal  // 3
+
+<hr>
+// In file <a href="../enums-and-adts/direction-1.scala">enums-and-adts/direction-1.scala</a>
+
+  Direction.values // Array(North, East, South, West)
+
+<hr>
+// In file <a href="../enums-and-adts/direction-1.scala">enums-and-adts/direction-1.scala</a>
+
+  Direction.valueOf("North") // North
+  Direction.valueOf("East")  // East
+  Direction.valueOf("Up")
+  // IllegalArgumentException: enum case not found: Up
+
+<hr>
+// In file <a href="../enums-and-adts/direction-2.scala">enums-and-adts/direction-2.scala</a>
+
+  enum Direction(val degrees: Int):
+    case North extends Direction(0)
+    case East extends Direction(90)
+    case South extends Direction(180)
+    case West extends Direction(270)
+
+<hr>
+// In file <a href="../enums-and-adts/direction-2.scala">enums-and-adts/direction-2.scala</a>
+
+  import Direction.*
+  North.degrees // 0
+  South.degrees // 180
+
+<hr>
+// In file <a href="../enums-and-adts/direction-3.scala">enums-and-adts/direction-3.scala</a>
+
+  enum Direction(val degrees: Int):
+
+    def invert: Direction =
+      this match
+        case North =&gt; South
+        case East =&gt; West
+        case South =&gt; North
+        case West =&gt; East
+
+    case North extends Direction(0)
+    case East extends Direction(90)
+    case South extends Direction(180)
+    case West extends Direction(270)
+
+<hr>
+// In file <a href="../enums-and-adts/direction-3.scala">enums-and-adts/direction-3.scala</a>
+
+  North.invert // South
+  East.invert  // West
+
+<hr>
+// In file <a href="../enums-and-adts/direction-3.scala">enums-and-adts/direction-3.scala</a>
+
+  object Direction:
+    def nearestTo(degrees: Int): Direction =
+      val rem = degrees % 360
+      val angle = if rem &lt; 0 then rem + 360 else rem
+      val (ne, se, sw, nw) = (45, 135, 225, 315)
+      angle match
+        case a if a &gt; nw || a &lt;= ne =&gt; North
+        case a if a &gt; ne &amp;&amp; a &lt;= se =&gt; East
+        case a if a &gt; se &amp;&amp; a &lt;= sw =&gt; South
+        case a if a &gt; sw &amp;&amp; a &lt;= nw =&gt; West
+
+<hr>
+// In file <a href="../enums-and-adts/direction-3.scala">enums-and-adts/direction-3.scala</a>
+
+  def allButNearest(degrees: Int): List[Direction] =
+    val nearest = Direction.nearestTo(degrees)
+    Direction.values.toList.filter(_ != nearest)
+
+<hr>
+// In file <a href="../enums-and-adts/direction-3.scala">enums-and-adts/direction-3.scala</a>
+
+  allButNearest(42) // List(East, South, West)
+
+<hr>
+// In file <a href="../enums-and-adts/java-direction.scala">enums-and-adts/java-direction.scala</a>
+
+enum Direction extends java.lang.Enum[Direction]:
+  case North, East, South, West
+
+<hr>
+// In file <a href="../enums-and-adts/java-direction.scala">enums-and-adts/java-direction.scala</a>
+
+Direction.East.compareTo(Direction.South)  // -1
+
+<hr>
+  </pre>
+  <h3><a name="sec2"></a>19.2 Algebraic data types</h3>
+
+  <pre><hr>
+// In file <a href="../enums-and-adts/eastwood-1.scala">enums-and-adts/eastwood-1.scala</a>
+
+  enum Eastwood[+G, +B]:
+    case Good(g: G)
+    case Bad(b: B)
+    case Ugly(ex: Throwable)
+
+<hr>
+// In file <a href="../enums-and-adts/eastwood-2.scala">enums-and-adts/eastwood-2.scala</a>
+
+  enum Eastwood[+G, +B]:
+
+    def map[G2](f: G =&gt; G2): Eastwood[G2, B] =
+      this match
+        case Good(g) =&gt; Good(f(g))
+        case Bad(b) =&gt; Bad(b)
+        case Ugly(ex) =&gt; Ugly(ex)
+
+    case Good(g: G)
+    case Bad(b: B)
+    case Ugly(ex: Throwable)
+
+<hr>
+// In file <a href="../enums-and-adts/eastwood-2.scala">enums-and-adts/eastwood-2.scala</a>
+
+  val eastWood = Good(41)
+  eastWood.map(n =&gt; n + 1) // Good(42)
+
+<hr>
+// In file <a href="../enums-and-adts/eastwood-3.scala">enums-and-adts/eastwood-3.scala</a>
+
+  // Generated sealed trait (the "enum type")
+  sealed trait Eastwood[+G, +B]
+
+  object Eastwood: // Generated companion object
+
+    // Generated case classes
+    case class Good[+G, +B](g: G) extends Eastwood[G, B]
+    case class Bad[+G, +B](b: B) extends Eastwood[G, B]
+    case class Ugly[+G, +B](ex: Throwable) extends Eastwood[G, B]
+
+<hr>
+scala&gt; Good(42)
+val res0: Eastwood[Int, Nothing] = Good(42)
+
+scala&gt; Bad("oops")
+val res1: Eastwood[Nothing, String] = Bad(oops)
+
+scala&gt; Ugly(new Exception)
+val res2: Eastwood[Nothing, Nothing] = Ugly(java.lang.Exception)
+
+<hr>
+// In file <a href="../enums-and-adts/seinlfeld.scala">enums-and-adts/seinlfeld.scala</a>
+
+  enum Seinfeld[+E]:
+    def ::[E2 &gt;: E](o: E2): Seinfeld[E2] = Yada(o, this)
+    case Yada(head: E, tail: Seinfeld[E])
+    case Nada
+
+<hr>
+  scala&gt; val xs = 1 :: 2 :: 3 :: Nada                                      
+  val xs: Seinfeld[Int] = Yada(1,Yada(2,Yada(3,Nada)))
+
+<hr>
+  </pre>
+  <h3><a name="sec3"></a>19.3 Generalized ADTs</h3>
+
+  <pre><hr>
+// In file <a href="../enums-and-adts/literal.scala">enums-and-adts/literal.scala</a>
+
+enum Literal[T]:
+  case IntLit(value: Int) extends Literal[Int]
+  case LongLit(value: Long) extends Literal[Long]
+  case CharLit(value: Char) extends Literal[Char]
+  case FloatLit(value: Float) extends Literal[Float]
+  case DoubleLit(value: Double) extends Literal[Double]
+  case BooleanLit(value: Boolean) extends Literal[Boolean]
+  case StringLit(value: String) extends Literal[String]
+
+<hr>
+// In file <a href="../enums-and-adts/literal.scala">enums-and-adts/literal.scala</a>
+
+import Literal.*
+
+def valueOfLiteral[T](lit: Literal[T]): T =
+  lit match
+    case IntLit(n) =&gt; n
+    case LongLit(m) =&gt; m
+    case CharLit(c) =&gt; c
+    case FloatLit(f) =&gt; f
+    case DoubleLit(d) =&gt; d
+    case BooleanLit(b) =&gt; b
+    case StringLit(s) =&gt; s
+
+<hr>
+// In file <a href="../enums-and-adts/literal.scala">enums-and-adts/literal.scala</a>
+
+valueOfLiteral(BooleanLit(true)) // true: Boolean
+valueOfLiteral(IntLit(42))       // 42: Int
+
+<hr>
+  </pre>
+  <h3><a name="sec4"></a>19.4 What makes ADTs algebraic</h3>
+
+  <pre><hr>
+// In file <a href="../enums-and-adts/traffic-light.scala">enums-and-adts/traffic-light.scala</a>
+
+  enum TrafficLight:
+    case Red, Yellow, Green
+
+<hr>
+// In file <a href="../enums-and-adts/hope.scala">enums-and-adts/hope.scala</a>
+
+  enum Hope[+T]:
+    case Glad(o: T)
+    case Sad
+
+<hr>
+// In file <a href="../enums-and-adts/both.scala">enums-and-adts/both.scala</a>
+
+  case class Both[A, B](a: A, b: B)
+
+<hr>
+  </pre>
+  <h3><a name="sec5"></a>19.5 Conclusion</h3>
+
+
+ <table>
+ <tr valign="top">
+ <td>
+ <div id="moreinfo">
+ <p>
+ For more information about <em>Programming in Scala, Fifth Edition</em> (the "Stairway Book"), please visit:
+ </p>
+ 
+ <p>
+ <a href="http://www.artima.com/shop/programming_in_scala_5ed">http://www.artima.com/shop/programming_in_scala_5ed</a>
+ </p>
+ 
+ <p>
+ and:
+ </p>
+ 
+ <p>
+ <a href="http://booksites.artima.com/programming_in_scala_5ed">http://booksites.artima.com/programming_in_scala_5ed</a>
+ </p>
+ </div>
+ </td>
+ <td>
+ <div id="license">
+ <p>
+   Copyright &copy; 2007-2020 Artima, Inc. All rights reserved.
+ </p>
+
+ <p>
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ </p>
+
+ <p style="margin-left: 20px">
+   <a href="http://www.apache.org/licenses/LICENSE-2.0">
+     http://www.apache.org/licenses/LICENSE-2.0
+   </a>
+ </p>
+
+ <p>
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ </p>
+ </div>
+ </td>
+ </tr>
+ </table>
+
+</body>
+</html>

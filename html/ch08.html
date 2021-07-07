@@ -1,0 +1,467 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/2002/REC-xhtml1-20020801/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO-8859-1" />
+  <title>Code Examples for Programming in Scala, Fifth Edition</title>
+  <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div id="mainTitles"><h3>Code Examples for</h3><h2>Programming in Scala, Fifth Edition</h2></div>  <p><a href="../index.html">
+    Return to chapter index
+  </a></p>
+  <h2>8 Functions and Closures</h2>
+
+  <p><a href="../functions-and-closures/transcript.txt">
+    Sample run of chapter's interpreter examples
+  </a></p>
+
+  <ul>
+
+    <li>8.1 <a href="#sec1">Methods</a></li>
+    <li>8.2 <a href="#sec2">Local functions</a></li>
+    <li>8.3 <a href="#sec3">First-class functions</a></li>
+    <li>8.4 <a href="#sec4">Short forms of function literals</a></li>
+    <li>8.5 <a href="#sec5">Placeholder syntax</a></li>
+    <li>8.6 <a href="#sec6">Partially applied functions</a></li>
+    <li>8.7 <a href="#sec7">Closures</a></li>
+    <li>8.8 <a href="#sec8">Special function call forms</a></li>
+    <li>8.9 <a href="#sec9">``SAM'' types</a></li>
+    <li>8.10 <a href="#sec10">Tail recursion</a></li>
+    <li>8.11 <a href="#sec11">Conclusion</a></li>
+  </ul>
+
+  <h3><a name="sec1"></a>8.1 Methods</h3>
+
+  <pre><hr>
+// In file <a href="../functions-and-closures/PadLines.scala">functions-and-closures/PadLines.scala</a>
+
+  object Padding:
+
+    def padLines(text: String, minWidth: Int): String =
+      val paddedLines =
+        for line &lt;- text.linesIterator yield
+          padLine(line, minWidth)
+      paddedLines.mkString("\n")
+
+    private def padLine(line: String, minWidth: Int): String =
+      if line.length &gt;= minWidth then line
+      else line + " " * (minWidth - line.length)
+
+<hr>
+  </pre>
+  <h3><a name="sec2"></a>8.2 Local functions</h3>
+
+  <pre><hr>
+// In file <a href="../functions-and-closures/PadLines2.scala">functions-and-closures/PadLines2.scala</a>
+
+  def padLines(text: String, minWidth: Int): String =
+    def padLine(line: String, minWidth: Int): String =
+      if line.length &gt;= minWidth then line
+      else line + " " * (minWidth - line.length)
+    val paddedLines =
+      for line &lt;- text.linesIterator yield
+        padLine(line, minWidth)
+    paddedLines.mkString("\n")
+
+<hr>
+// In file <a href="../functions-and-closures/PadLines3.scala">functions-and-closures/PadLines3.scala</a>
+
+  object Padding:
+
+    def padLines(text: String, minWidth: Int): String =
+
+      def padLine(line: String): String =
+        if line.length &gt;= minWidth then line
+        else line + " " * (minWidth - line.length)
+
+      val paddedLines =
+        for line &lt;- text.linesIterator yield
+          padLine(line)
+
+      paddedLines.mkString("\n")
+
+<hr>
+  </pre>
+  <h3><a name="sec3"></a>8.3 First-class functions</h3>
+
+  <pre><hr>
+  (x: Int) =&gt; x + 1
+
+<hr>
+  val increase = (x: Int) =&gt; x + 1
+  increase(10)   // 11
+
+<hr>
+  val addTwo = (x: Int) =&gt;
+    val increment = 2
+    x + increment
+  addTwo(10)   // 12
+
+<hr>
+  scala&gt; val someNumbers = List(-11, -10, -5, 0, 5, 10)
+<span class="output">  val someNumbers: List[Int] = List(-11, -10, -5, 0, 5, 10)</span>
+
+  scala&gt; someNumbers.foreach((x: Int) =&gt; println(x))
+<span class="output">  -11</span>
+<span class="output">  -10</span>
+<span class="output">  -5</span>
+<span class="output">  0</span>
+<span class="output">  5</span>
+<span class="output">  10</span>
+
+<hr>
+  scala&gt; someNumbers.filter((x: Int) =&gt; x &gt; 0)
+<span class="output">  val res4: List[Int] = List(5, 10)</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec4"></a>8.4 Short forms of function literals</h3>
+
+  <pre><hr>
+  scala&gt; someNumbers.filter((x) =&gt; x &gt; 0)
+<span class="output">  val res5: List[Int] = List(5, 10)</span>
+
+<hr>
+  scala&gt; someNumbers.filter(x =&gt; x &gt; 0)
+<span class="output">  val res6: List[Int] = List(5, 10)</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec5"></a>8.5 Placeholder syntax</h3>
+
+  <pre><hr>
+  scala&gt; someNumbers.filter(_ &gt; 0)
+<span class="output">  val res7: List[Int] = List(5, 10)</span>
+
+<hr>
+  scala&gt; someNumbers.filter(x =&gt; x &gt; 0)
+<span class="output">  val res8: List[Int] = List(5, 10)</span>
+
+<hr>
+  scala&gt; val f = _ + _
+<span class="output">                 ^</span>
+<span class="output">         error: missing parameter type for expanded function</span>
+<span class="output">  ((x$1: &lt;error&gt;, x$2) =&gt; x$1.$plus(x$2))</span>
+
+<hr>
+  scala&gt; val f = (_: Int) + (_: Int)
+<span class="output">  val f: (Int, Int) =&gt; Int = $$Lambda$1075/1481958694@289fff3c</span>
+
+  scala&gt; f(5, 10)
+<span class="output">  val res9: Int = 15</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec6"></a>8.6 Partially applied functions</h3>
+
+  <pre><hr>
+  def sum(a: Int, b: Int, c: Int) = a + b + c
+
+<hr>
+  sum(1, 2, 3)   // 6
+
+<hr>
+  val a = sum(_, _, _) // a has type (Int, Int, Int) =&gt; Int
+
+<hr>
+  a(1, 2, 3)   // 6
+
+<hr>
+  a.apply(1, 2, 3)   // 6
+
+<hr>
+  val b = sum(1, _, 3) // b has type Int =&gt; Int
+
+<hr>
+  b(2)   // 6
+  b(5)   // 9
+
+<hr>
+  val c = sum // c has type (Int, Int, Int) =&gt; Int
+
+<hr>
+  c(10, 20, 30)   // 60
+
+<hr>
+  </pre>
+  <h3><a name="sec7"></a>8.7 Closures</h3>
+
+  <pre><hr>
+  (x: Int) =&gt; x + more  // how much more?
+
+<hr>
+  scala&gt; (x: Int) =&gt; x + more
+<span class="output">  1 |(x: Int) =&gt; x + more</span>
+<span class="output">    |                ^^^^</span>
+<span class="output">    |                Not found: more</span>
+
+<hr>
+  var more = 1
+  val addMore = (x: Int) =&gt; x + more
+  addMore(10)   // 11
+
+<hr>
+  more = 9999
+  addMore(10)   // 10009
+
+<hr>
+  val someNumbers = List(-11, -10, -5, 0, 5, 10)
+  var sum = 0
+  someNumbers.foreach(sum +=  _)
+  sum   // -11
+
+<hr>
+  def makeIncreaser(more: Int) = (x: Int) =&gt; x + more
+
+<hr>
+  val inc1 = makeIncreaser(1)
+  val inc9999 = makeIncreaser(9999)
+
+<hr>
+  inc1(10)      // 11
+  inc9999(10)   // 10009
+
+<hr>
+  </pre>
+  <h3><a name="sec8"></a>8.8 Special function call forms</h3>
+
+  <pre><hr>
+  scala&gt; def echo(args: String*) =
+       |   for arg &lt;- args do println(arg)
+<span class="output">  def echo(args: String*): Unit</span>
+
+<hr>
+  scala&gt; echo()
+
+  scala&gt; echo("one")
+<span class="output">  one</span>
+
+  scala&gt; echo("hello", "world!")
+<span class="output">  hello</span>
+<span class="output">  world!</span>
+
+<hr>
+  scala&gt; val seq = Seq("What's", "up", "doc?")
+<span class="output">  val seq: Seq[String] = List(What's, up, doc?)</span>
+
+  scala&gt; echo(seq)
+<span class="output">  1 |echo(seq)</span>
+<span class="output">    |     ^^^</span>
+<span class="output">    |     Found:    (seq : Seq[String])</span>
+<span class="output">    |     Required: String</span>
+
+<hr>
+  scala&gt; echo(seq*)
+<span class="output">  What's</span>
+<span class="output">  up</span>
+<span class="output">  doc?</span>
+
+<hr>
+  def speed(distance: Float, time: Float) = distance / time
+  speed(100, 10)   // 10.0
+
+<hr>
+  speed(distance = 100, time = 10)   // 10.0
+
+<hr>
+  speed(time = 10, distance = 100)   // 10.0
+
+<hr>
+// In file <a href="../functions-and-closures/NamedDefault.scala">functions-and-closures/NamedDefault.scala</a>
+
+  // In same source file as class Rational
+  object Rational:
+    def apply(numer: Int, denom: Int = 1) =
+      new Rational(numer, denom)
+
+<hr>
+// In file <a href="../functions-and-closures/NamedDefault.scala">functions-and-closures/NamedDefault.scala</a>
+
+  def point(x: Int = 0, y: Int = 0) = (x, y)
+
+<hr>
+  point(x = 42)
+
+<hr>
+  point(y = 1000)
+
+<hr>
+  </pre>
+  <h3><a name="sec9"></a>8.9 ``SAM'' types</h3>
+
+  <pre><hr>
+  JButton button = new JButton(); // This is Java
+  button.addActionListener(
+    event -&gt; System.out.println("pressed!")
+  );
+
+<hr>
+  val button = new JButton
+  button.addActionListener(
+    _ =&gt; println("pressed!")
+  )
+
+<hr>
+  trait Increaser:
+    def increase(i: Int): Int
+
+<hr>
+  def increaseOne(increaser: Increaser): Int =
+    increaser.increase(1)
+
+<hr>
+  increaseOne(
+    new Increaser:
+      def increase(i: Int): Int = i + 7
+  )
+
+<hr>
+  increaseOne(i =&gt; i + 7) // Scala
+
+<hr>
+  </pre>
+  <h3><a name="sec10"></a>8.10 Tail recursion</h3>
+
+  <pre><hr>
+// In file <a href="../functions-and-closures/Approximate.scala">functions-and-closures/Approximate.scala</a>
+
+  def approximate(guess: Double): Double =
+    if isGoodEnough(guess) then guess
+    else approximate(improve(guess))
+
+<hr>
+// In file <a href="../functions-and-closures/Approximate.scala">functions-and-closures/Approximate.scala</a>
+
+  def approximateLoop(initialGuess: Double): Double =
+    var guess = initialGuess
+    while !isGoodEnough(guess) do
+      guess = improve(guess)
+    guess
+
+<hr>
+// In file <a href="../functions-and-closures/TailRecursion.scala">functions-and-closures/TailRecursion.scala</a>
+
+  def boom(x: Int): Int =
+    if x == 0 then throw new Exception("boom!")
+    else boom(x - 1) + 1
+
+<hr>
+  scala&gt;  boom(3)
+<span class="output">  java.lang.Exception: boom!</span>
+<span class="output">  	at .boom(&lt;console&gt;:5)</span>
+<span class="output">  	at .boom(&lt;console&gt;:6)</span>
+<span class="output">  	at .boom(&lt;console&gt;:6)</span>
+<span class="output">  	at .boom(&lt;console&gt;:6)</span>
+<span class="output">  	at .&lt;init&gt;(&lt;console&gt;:6)</span>
+<span class="output">  ...</span>
+
+<hr>
+  public double approximate(double);
+    Code:
+     0:   aload_0
+     1:   astore_3
+     2:   aload_0
+     3:   dload_1
+     4:   invokevirtual   #24; //Method isGoodEnough:(D)Z
+     7:   ifeq    12
+     10:  dload_1
+     11:  dreturn
+     12:  aload_0
+     13:  dload_1
+     14:  invokevirtual   #27; //Method improve:(D)D
+     17:  dstore_1
+     18:  goto    2
+
+<hr>
+// In file <a href="../functions-and-closures/TailRecursion.scala">functions-and-closures/TailRecursion.scala</a>
+
+ def bang(x: Int): Int =
+   if x == 0 then throw new Exception("bang!")
+   else bang(x - 1)
+
+<hr>
+  scala&gt; bang(5)
+<span class="output">  java.lang.Exception: bang!</span>
+<span class="output">  	at .bang(&lt;console&gt;:5)</span>
+<span class="output">  	at .&lt;init&gt;(&lt;console&gt;:6) ...</span>
+
+<hr>
+// In file <a href="../functions-and-closures/Misc.scala">functions-and-closures/Misc.scala</a>
+
+  def isEven(x: Int): Boolean =
+    if x == 0 then true else isOdd(x - 1)
+  def isOdd(x: Int): Boolean =
+    if x == 0 then false else isEven(x - 1)
+
+<hr>
+// In file <a href="../functions-and-closures/Misc.scala">functions-and-closures/Misc.scala</a>
+
+  val funValue = nestedFun
+  def nestedFun(x: Int): Unit =
+    if x != 0 then
+      println(x)
+      funValue(x - 1)
+
+<hr>
+  </pre>
+  <h3><a name="sec11"></a>8.11 Conclusion</h3>
+
+
+ <table>
+ <tr valign="top">
+ <td>
+ <div id="moreinfo">
+ <p>
+ For more information about <em>Programming in Scala, Fifth Edition</em> (the "Stairway Book"), please visit:
+ </p>
+ 
+ <p>
+ <a href="http://www.artima.com/shop/programming_in_scala_5ed">http://www.artima.com/shop/programming_in_scala_5ed</a>
+ </p>
+ 
+ <p>
+ and:
+ </p>
+ 
+ <p>
+ <a href="http://booksites.artima.com/programming_in_scala_5ed">http://booksites.artima.com/programming_in_scala_5ed</a>
+ </p>
+ </div>
+ </td>
+ <td>
+ <div id="license">
+ <p>
+   Copyright &copy; 2007-2020 Artima, Inc. All rights reserved.
+ </p>
+
+ <p>
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ </p>
+
+ <p style="margin-left: 20px">
+   <a href="http://www.apache.org/licenses/LICENSE-2.0">
+     http://www.apache.org/licenses/LICENSE-2.0
+   </a>
+ </p>
+
+ <p>
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ </p>
+ </div>
+ </td>
+ </tr>
+ </table>
+
+</body>
+</html>

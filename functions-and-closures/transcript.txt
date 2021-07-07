@@ -1,0 +1,123 @@
+/*
+ * Copyright (C) 2007-2020 Artima, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Automatically generated Scala interpreter transcript from:
+ *
+ * Programming in Scala (Fifth Edition)
+ * by Martin Odersky, Lex Spoon, Bill Venners, and Frank Sommers
+ *
+ * http://booksites.artima.com/programming_in_scala_5ed
+ */
+
+
+scala> val someNumbers = List(-11, -10, -5, 0, 5, 10)
+someNumbers: List[Int] = List(-11, -10, -5, 0, 5, 10)
+
+scala> someNumbers.foreach((x: Int) => println(x))
+-11
+-10
+-5
+0
+5
+10
+
+scala> someNumbers.filter((x: Int) => x > 0)
+res1: List[Int] = List(5, 10)
+
+scala> someNumbers.filter((x) => x > 0)
+res2: List[Int] = List(5, 10)
+
+scala> someNumbers.filter(x => x > 0)
+res3: List[Int] = List(5, 10)
+
+scala> someNumbers.filter(_ > 0)
+res4: List[Int] = List(5, 10)
+
+scala> someNumbers.filter(x => x > 0)
+res5: List[Int] = List(5, 10)
+
+scala> val f = _ + _
+               ^
+       error: missing parameter type for expanded function ((<x$1: error>, x$2) => x$1.$plus(x$2))
+                   ^
+       error: missing parameter type for expanded function ((<x$1: error>, <x$2: error>) => x$1.$plus(x$2))
+
+scala> val f = (_: Int) + (_: Int)
+f: (Int, Int) => Int = $$Lambda$785/208824749@1c23e369
+
+scala> f(5, 10)
+res6: Int = 15
+
+scala> (x: Int) => x + more
+                       ^
+       error: not found: value more
+
+scala>   def makeIncreaser(more: Int) = (x: Int) => x + more
+
+makeIncreaser: (more: Int)Int => Int
+
+scala> def echo(args: String*) =
+         for arg <- args do println(arg)
+         for arg <- args do println(arg)
+             ^
+On line 2: error: '(' expected but identifier found.
+
+scala> echo()
+       ^
+       error: not found: value echo
+
+scala> echo("one")
+       ^
+       error: not found: value echo
+
+scala> echo("hello", "world!")
+       ^
+       error: not found: value echo
+
+scala> val seq = Seq("What's", "up", "doc?")
+seq: Seq[String] = List(What's, up, doc?)
+
+scala> echo(seq)
+       ^
+       error: not found: value echo
+
+scala> echo(seq*)
+       ^
+       error: not found: value echo
+               ^
+       error: value * is not a member of Seq[String]
+
+scala>   def boom(x: Int): Int =
+           if x == 0 then throw new Exception("boom!")
+           else boom(x - 1) + 1
+
+                  if x == 0 then throw new Exception("boom!")
+                     ^
+On line 2: error: '(' expected but identifier found.
+                  if x == 0 then throw new Exception("boom!")
+                            ^
+On line 2: warning: then is a reserved word (since 2.10.0); usage as an identifier is deprecated
+
+scala>  def bang(x: Int): Int =
+          if x == 0 then throw new Exception("bang!")
+          else bang(x - 1)
+
+                 if x == 0 then throw new Exception("bang!")
+                    ^
+On line 2: error: '(' expected but identifier found.
+                 if x == 0 then throw new Exception("bang!")
+                           ^
+On line 2: warning: then is a reserved word (since 2.10.0); usage as an identifier is deprecated
+

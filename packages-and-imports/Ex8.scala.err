@@ -1,0 +1,8 @@
+class Outer:
+
+  class Inner:
+    private def f = "f"
+    class InnerMost:
+      f // OK
+
+  (new Inner).f // error: f is not accessible

@@ -1,0 +1,533 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/2002/REC-xhtml1-20020801/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO-8859-1" />
+  <title>Code Examples for Programming in Scala, Fifth Edition</title>
+  <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div id="mainTitles"><h3>Code Examples for</h3><h2>Programming in Scala, Fifth Edition</h2></div>  <p><a href="../index.html">
+    Return to chapter index
+  </a></p>
+  <h2>21 Givens</h2>
+
+  <p><a href="../givens/transcript.txt">
+    Sample run of chapter's interpreter examples
+  </a></p>
+
+  <ul>
+
+    <li>21.1 <a href="#sec1">How it works</a></li>
+    <li>21.2 <a href="#sec2">Parameterized given types</a></li>
+    <li>21.3 <a href="#sec3">Anonymous givens</a></li>
+    <li>21.4 <a href="#sec4">Parameterized givens as typeclasses</a></li>
+    <li>21.5 <a href="#sec5">Given imports</a></li>
+    <li>21.6 <a href="#sec6">Rules for context parameters</a></li>
+    <li>21.7 <a href="#sec7">When multiple givens apply</a></li>
+    <li>21.8 <a href="#sec8">Debugging givens</a></li>
+    <li>21.9 <a href="#sec9">Conclusion</a></li>
+  </ul>
+
+  <h3><a name="sec1"></a>21.1 How it works</h3>
+
+  <pre><hr>
+  class PreferredPrompt(val preference: String)
+
+<hr>
+  object Greeter:
+    def greet(name: String)(using prompt: PreferredPrompt) =
+      println(s"Welcome, $name. The system is ready.")
+      println(prompt.preference)
+
+<hr>
+// In file <a href="../givens/JillsPrefs.scala">givens/JillsPrefs.scala</a>
+
+  object JillsPrefs:
+    given prompt: PreferredPrompt =
+      PreferredPrompt("Your wish&gt; ")
+
+<hr>
+  scala&gt; Greeter.greet("Jill")
+<span class="output">  1 |Greeter.greet("Jill")</span>
+<span class="output">    |                     ^</span>
+<span class="output">    |no implicit argument of type PreferredPrompt was found</span>
+<span class="output">    |for parameter prompt of method greet in object Greeter</span>
+
+<hr>
+  scala&gt; import JillsPrefs.prompt
+
+  scala&gt; Greeter.greet("Jill")
+<span class="output">  Welcome, Jill. The system is ready.</span>
+<span class="output">  Your wish&gt;</span>
+
+<hr>
+  scala&gt; Greeter.greet("Jill")(JillsPrefs.prompt)
+<span class="output">  1 |Greeter.greet("Jill")(JillsPrefs.prompt)</span>
+<span class="output">    |^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="output">    |method greet in object Greeter does not take more</span>
+<span class="output">    |parameters</span>
+
+<hr>
+  scala&gt; Greeter.greet("Jill")(using JillsPrefs.prompt)
+<span class="output">  Welcome, Jill. The system is ready.</span>
+<span class="output">  Your wish&gt;</span>
+
+<hr>
+  scala&gt; Greeter.greet("Joe")
+<span class="output">  1 |Greeter.greet("Joe")</span>
+<span class="output">    |                    ^</span>
+<span class="output">    |no implicit argument of type PreferredPrompt was found</span>
+<span class="output">    |for parameter prompt of method greet in object Greeter</span>
+
+<hr>
+  scala&gt; import JoesPrefs.{prompt, drink}
+
+<hr>
+  scala&gt; Greeter.greet("Joe")(using prompt, drink)
+<span class="output">  Welcome, Joe. The system is ready.</span>
+<span class="output">  But while you work, why not enjoy a cup of tea?</span>
+<span class="output">  relax&gt;</span>
+
+<hr>
+  scala&gt; Greeter.greet("Joe")
+<span class="output">  Welcome, Joe. The system is ready.</span>
+<span class="output">  But while you work, why not enjoy a cup of tea?</span>
+<span class="output">  relax&gt;</span>
+
+<hr>
+// In file <a href="../givens/prefs.scala">givens/prefs.scala</a>
+
+  class PreferredPrompt(val preference: String)
+  class PreferredDrink(val preference: String)
+
+  object Greeter:
+    def greet(name: String)(using prompt: PreferredPrompt,
+        drink: PreferredDrink) =
+
+      println(s"Welcome, $name. The system is ready.")
+      print("But while you work, ")
+      println(s"why not enjoy a cup of ${drink.preference}?")
+      println(prompt.preference)
+
+  object JoesPrefs:
+    given prompt: PreferredPrompt =
+      PreferredPrompt("relax&gt; ")
+    given drink: PreferredDrink =
+      PreferredDrink("tea")
+
+<hr>
+  </pre>
+  <h3><a name="sec2"></a>21.2 Parameterized given types</h3>
+
+  <pre><hr>
+  // Does not compile.
+  def isort[T](xs: List[T]): List[T] =
+    if xs.isEmpty then Nil
+    else insert(xs.head, isort(xs.tail))
+
+  def insert[T](x: T, xs: List[T]): List[T] =
+    if xs.isEmpty || x &lt;= xs.head then x :: xs
+    else xs.head :: insert(x, xs.tail)
+
+<hr>
+<span class="output">  6 |  if xs.isEmpty || x &lt;= xs.head then x :: xs</span>
+<span class="output">    |                     ^^^^</span>
+<span class="output">    |                     value &lt;= is not a member of T, ...</span>
+
+<hr>
+// In file <a href="../givens/isort1.scala">givens/isort1.scala</a>
+
+  def isort[T](xs: List[T])(lteq: (T, T) =&gt; Boolean): List[T] =
+    if xs.isEmpty then Nil
+    else insert(xs.head, isort(xs.tail)(lteq))(lteq)
+
+  def insert[T](x: T, xs: List[T])
+      (lteq: (T, T) =&gt; Boolean): List[T] =
+    if xs.isEmpty || lteq(x, xs.head) then x :: xs
+    else xs.head :: insert(x, xs.tail)(lteq)
+
+<hr>
+// In file <a href="../givens/isort1.scala">givens/isort1.scala</a>
+
+  isort(List(4, -10, 10))((x: Int, y: Int) =&gt; x &lt;= y)
+  // List(-10, 4, 10)
+
+  isort(List("cherry", "blackberry", "apple", "pear"))
+      ((x: String, y: String) =&gt; x.compareTo(y) &lt;= 0)
+  // List(apple, blackberry, cherry, pear)
+
+  isort(List(Rational(7, 8), Rational(5, 6), Rational(1, 2)))
+      ((x: Rational, y: Rational) =&gt;
+          x.numer * y.denom &lt;= x.denom * y.numer)
+  // List(1/2, 5/6, 7/8)
+
+<hr>
+// In file <a href="../givens/isort1.scala">givens/isort1.scala</a>
+
+  isort(List(4, -10, 10))((x, y) =&gt; x &lt;= y)
+  // List(-10, 4, 10)
+
+  isort(List("cherry", "blackberry", "apple", "pear"))
+      ((x, y) =&gt; x.compareTo(y) &lt; 1)
+  // List(apple, blackberry, cherry, pear)
+
+  isort(List(Rational(7, 8), Rational(5, 6), Rational(1, 2)))
+      ((x, y) =&gt; x.numer * y.denom &lt;= x.denom * y.numer)
+  // List(1/2, 5/6, 7/8)
+
+<hr>
+// In file <a href="../givens/Ord.scala">givens/Ord.scala</a>
+
+  trait Ord[T]:
+    def compare(x: T, y: T): Int
+    def lteq(x: T, y: T): Boolean = compare(x, y) &lt; 1
+
+<hr>
+// In file <a href="../givens/rationalOrd.scala">givens/rationalOrd.scala</a>
+
+  def isort[T](xs: List[T])(using ord: Ord[T]): List[T] =
+    if xs.isEmpty then Nil
+    else insert(xs.head, isort(xs.tail))
+
+  def insert[T](x: T, xs: List[T])
+        (using ord: Ord[T]): List[T] =
+    if xs.isEmpty || ord.lteq(x, xs.head) then x :: xs
+    else xs.head :: insert(x, xs.tail)
+
+<hr>
+  object Ord:
+    // (Not yet idiomatic)
+    given intOrd: Ord[Int] =
+      new Ord[Int]:
+        def compare(x: Int, y: Int) =
+          if x == y then 0 else if x &gt; y then 1 else -1
+
+<hr>
+  object Ord:
+    // This is idiomatic
+    given intOrd: Ord[Int] with
+      def compare(x: Int, y: Int) =
+        if x == y then 0 else if x &gt; y then 1 else -1
+
+<hr>
+  isort(List(10, 2, -10))
+  // List(-10, 2, 10)
+
+<hr>
+// In file <a href="../givens/string-ord.scala">givens/string-ord.scala</a>
+
+  // Added to object Ord
+  given stringOrd: Ord[String] with
+    def compare(s: String, t: String) = s.compareTo(t)
+
+<hr>
+// In file <a href="../givens/isort2.scala">givens/isort2.scala</a>
+
+  isort(List("mango", "jackfruit", "durian"))
+  // List(durian, jackfruit, mango)
+
+<hr>
+  </pre>
+  <h3><a name="sec3"></a>21.3 Anonymous givens</h3>
+
+  <pre><hr>
+  val age = 42
+
+<hr>
+// In file <a href="../givens/rev-ord.scala">givens/rev-ord.scala</a>
+
+  given revIntOrd: Ord[Int] with
+    def compare(x: Int, y: Int) =
+      if x == y then 0 else if x &gt; y then -1 else 1
+
+  given revStringOrd: Ord[String] with
+    def compare(s: String, t: String) = -s.compareTo(t)
+
+<hr>
+// In file <a href="../givens/ord-int-string-compare.scala">givens/ord-int-string-compare.scala</a>
+
+  given Ord[Int] with
+    def compare(x: Int, y: Int) =
+      if x == y then 0 else if x &gt; y then -1 else 1
+
+  given Ord[String] with
+    def compare(s: String, t: String) = -s.compareTo(t)
+
+<hr>
+  </pre>
+  <h3><a name="sec4"></a>21.4 Parameterized givens as typeclasses</h3>
+
+  <pre><hr>
+// In file <a href="../givens/rationalOrd.scala">givens/rationalOrd.scala</a>
+
+  object Rational:
+    given rationalOrd: Ord[Rational] with
+      def compare(x: Rational, y: Rational) =
+        if x.numer * y.denom &lt; x.denom * y.numer then -1
+        else if x.numer * y.denom &gt; x.denom * y.numer then 1
+        else 0
+
+<hr>
+// In file <a href="../givens/rationalOrd.scala">givens/rationalOrd.scala</a>
+
+  isort(List(Rational(4, 5), Rational(1, 2), Rational(2, 3)))
+  // List(1/2, 2/3, 4/5)
+
+<hr>
+// In file <a href="../givens/isort-param.scala">givens/isort-param.scala</a>
+
+  def isort[T](xs: List[T])(using Ordering[T]): List[T] =
+    if xs.isEmpty then Nil
+    else insert(xs.head, isort(xs.tail))
+
+  def insert[T](x: T, xs: List[T])
+      (using ord: Ordering[T]): List[T] =
+    if xs.isEmpty || ord.lteq(x, xs.head) then x :: xs
+    else xs.head :: insert(x, xs.tail)
+
+<hr>
+// In file <a href="../givens/msort.scala">givens/msort.scala</a>
+
+  def msort[T](xs: List[T])(using ord: Ordering[T]): List[T] =
+    def merge(xs: List[T], ys: List[T]): List[T] =
+      (xs, ys) match
+        case (Nil, _) =&gt; ys
+        case (_, Nil) =&gt; xs
+        case (x :: xs1, y :: ys1) =&gt;
+          if ord.lt(x, y) then x :: merge(xs1, ys)
+          else y :: merge(xs, ys1)
+
+    val n = xs.length / 2
+    if n == 0 then xs
+    else
+      val (ys, zs) = xs.splitAt(n)
+      merge(msort(ys), msort(zs))
+
+<hr>
+  </pre>
+  <h3><a name="sec5"></a>21.5 Given imports</h3>
+
+  <pre><hr>
+// In file <a href="../givens/TomsPrefs.scala">givens/TomsPrefs.scala</a>
+
+  object TomsPrefs:
+    val favoriteColor = "blue"
+    def favoriteFood = "steak"
+    given prompt: PreferredPrompt =
+      PreferredPrompt("enjoy&gt; ")
+    given drink: PreferredDrink =
+      PreferredDrink("red wine")
+    given prefPromptOrd: Ordering[PreferredPrompt] with
+      def compare(x: PreferredPrompt, y: PreferredPrompt) =
+        x.preference.compareTo(y.preference)
+    given prefDrinkOrd: Ordering[PreferredDrink] with
+      def compare(x: PreferredDrink, y: PreferredDrink) =
+        x.preference.compareTo(y.preference)
+
+<hr>
+// In file <a href="../givens/TomsPrefs-import.scala">givens/TomsPrefs-import.scala</a>
+
+// imports only favoriteColor and favoriteFood
+import TomsPrefs.*
+
+<hr>
+// In file <a href="../givens/TomsPrefs-import.scala">givens/TomsPrefs-import.scala</a>
+
+import TomsPrefs.prompt // imports prompt
+
+<hr>
+// In file <a href="../givens/TomsPrefs-import.scala">givens/TomsPrefs-import.scala</a>
+
+  // imports prompt, drink, prefPromptOrd, and prefDrinkOrd
+  import TomsPrefs.given
+
+<hr>
+// In file <a href="../givens/TomsPrefs-import.scala">givens/TomsPrefs-import.scala</a>
+
+  // imports drink, because it is a given of
+  // type PreferredDrink
+  import TomsPrefs.{given PreferredDrink}
+
+<hr>
+// In file <a href="../givens/prefPromptOrd.scala">givens/prefPromptOrd.scala</a>
+
+  // imports prefPromptOrd and prefDrinkOrd
+  import TomsPrefs.{given Ordering[PreferredPrompt],
+     given Ordering[PreferredDrink]}
+
+<hr>
+// In file <a href="../givens/TomsPrefs-import.scala">givens/TomsPrefs-import.scala</a>
+
+  // imports prefPromptOrd and prefDrinkOrd
+  import TomsPrefs.{given Ordering[?]}
+
+<hr>
+  </pre>
+  <h3><a name="sec6"></a>21.6 Rules for context parameters</h3>
+
+  <pre><hr>
+  given amysPrompt: PreferredPrompt = PreferredPrompt("hi&gt; ")
+
+<hr>
+// In file <a href="../givens/rational-compare.scala">givens/rational-compare.scala</a>
+
+  object Rational:
+    given rationalOrdering: Ordering[Rational] with
+      def compare(x: Rational, y: Rational) =
+        if x.numer * y.denom &lt; x.denom * y.numer then -1
+        else if x.numer * y.denom &gt; x.denom * y.numer then 1
+        else 0
+
+<hr>
+// In file <a href="../givens/TomsPrefs-import.scala">givens/TomsPrefs-import.scala</a>
+
+  import TomsPrefs.prefPromptOrd
+
+<hr>
+  </pre>
+  <h3><a name="sec7"></a>21.7 When multiple givens apply</h3>
+
+  <pre><hr>
+// In file <a href="../givens/PreferredPrompt.scala">givens/PreferredPrompt.scala</a>
+
+  class PreferredPrompt(val preference: String)
+
+  object Greeter:
+   def greet(name: String)(using prompt: PreferredPrompt) =
+     println(s"Welcome, $name. The system is ready.")
+     println(prompt.preference)
+
+  object JillsPrefs:
+    given jillsPrompt: PreferredPrompt =
+      PreferredPrompt("Your wish&gt; ")
+
+  object JoesPrefs:
+    given joesPrompt: PreferredPrompt =
+      PreferredPrompt("relax&gt; ")
+
+<hr>
+  scala&gt; import JillsPrefs.jillsPrompt
+
+  scala&gt; import JoesPrefs.joesPrompt
+
+<hr>
+  scala&gt; Greeter.greet("Who's there?")
+<span class="output">  1 |Greeter.greet("Who's there?")</span>
+<span class="output">    |                             ^</span>
+<span class="output">    |ambiguous implicit arguments: both given instance</span>
+<span class="output">    |joesPrompt in object JoesPrefs and given instance</span>
+<span class="output">    |jillsPrompt in object JillsPrefs match type</span>
+<span class="output">    |PreferredPrompt of parameter prompt of method</span>
+<span class="output">    |greet in object Greeter</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec8"></a>21.8 Debugging givens</h3>
+
+  <pre><hr>
+<span class="output">  Mocha.enjoy("reader")(Mocha.pref)</span>
+
+<hr>
+// In file <a href="../givens/ImplicitsExample.scala">givens/ImplicitsExample.scala</a>
+
+  object Mocha:
+
+    class PreferredDrink(val preference: String)
+
+    given pref: PreferredDrink = new PreferredDrink("mocha")
+
+    def enjoy(name: String)(using drink: PreferredDrink): Unit =
+      print(s"Welcome, $name")
+      print(". Enjoy a ")
+      print(drink.preference)
+      println("!")
+
+    def callEnjoy: Unit = enjoy("reader")
+
+<hr>
+  $ scalac -Xprint:typer Mocha.scala
+<span class="output">  package &lt;empty&gt; {</span>
+<span class="output">    final lazy module val Mocha: Mocha$ = new Mocha$()</span>
+<span class="output">      def callEnjoy: Unit = Mocha.enjoy("reader")(Mocha.pref)</span>
+<span class="output">    final module class Mocha$() extends Object() {</span>
+<span class="output">          this: Mocha.type =&gt;</span>
+       // ...
+<span class="output">      final lazy given val pref: Mocha.PreferredDrink =</span>
+<span class="output">        new Mocha.PreferredDrink("mocha")</span>
+<span class="output">      def enjoy(name: String)(using drink:</span>
+<span class="output">            Mocha.PreferredDrink): Unit = {</span>
+<span class="output">        print(</span>
+<span class="output">          _root_.scala.StringContext.apply(["Welcome,</span>
+<span class="output">              ","" : String]:String*).s([name : Any]:Any*)</span>
+<span class="output">        )</span>
+<span class="output">        print(". Enjoy a ")</span>
+<span class="output">        print(drink.preference)</span>
+<span class="output">        println("!")</span>
+<span class="output">      }</span>
+<span class="output">      def callEnjoy: Unit = Mocha.enjoy("reader")(Mocha.pref)</span>
+<span class="output">    }</span>
+<span class="output">  }</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec9"></a>21.9 Conclusion</h3>
+
+
+ <table>
+ <tr valign="top">
+ <td>
+ <div id="moreinfo">
+ <p>
+ For more information about <em>Programming in Scala, Fifth Edition</em> (the "Stairway Book"), please visit:
+ </p>
+ 
+ <p>
+ <a href="http://www.artima.com/shop/programming_in_scala_5ed">http://www.artima.com/shop/programming_in_scala_5ed</a>
+ </p>
+ 
+ <p>
+ and:
+ </p>
+ 
+ <p>
+ <a href="http://booksites.artima.com/programming_in_scala_5ed">http://booksites.artima.com/programming_in_scala_5ed</a>
+ </p>
+ </div>
+ </td>
+ <td>
+ <div id="license">
+ <p>
+   Copyright &copy; 2007-2020 Artima, Inc. All rights reserved.
+ </p>
+
+ <p>
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ </p>
+
+ <p style="margin-left: 20px">
+   <a href="http://www.apache.org/licenses/LICENSE-2.0">
+     http://www.apache.org/licenses/LICENSE-2.0
+   </a>
+ </p>
+
+ <p>
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ </p>
+ </div>
+ </td>
+ </tr>
+ </table>
+
+</body>
+</html>

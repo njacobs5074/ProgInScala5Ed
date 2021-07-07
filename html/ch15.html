@@ -1,0 +1,356 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/2002/REC-xhtml1-20020801/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO-8859-1" />
+  <title>Code Examples for Programming in Scala, Fifth Edition</title>
+  <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div id="mainTitles"><h3>Code Examples for</h3><h2>Programming in Scala, Fifth Edition</h2></div>  <p><a href="../index.html">
+    Return to chapter index
+  </a></p>
+  <h2>15 Working with Other Collections</h2>
+
+  <p><a href="../working-with-other-collections/transcript.txt">
+    Sample run of chapter's interpreter examples
+  </a></p>
+
+  <ul>
+
+    <li>15.1 <a href="#sec1">Sequences</a></li>
+    <li>15.2 <a href="#sec2">Sets and maps</a></li>
+    <li>15.3 <a href="#sec3">Selecting mutable versus immutable collections</a></li>
+    <li>15.4 <a href="#sec4">Initializing collections</a></li>
+    <li>15.5 <a href="#sec5">Tuples</a></li>
+    <li>15.6 <a href="#sec6">Conclusion</a></li>
+  </ul>
+
+  <h3><a name="sec1"></a>15.1 Sequences</h3>
+
+  <pre><hr>
+  val colors = List("red", "blue", "green")
+  colors.head  // red
+  colors.tail  // List(blue, green)
+
+<hr>
+  val fiveInts = new Array[Int](5)  // Array(0, 0, 0, 0, 0)
+
+<hr>
+  val fiveToOne = Array(5, 4, 3, 2, 1)  // Array(5, 4, 3, 2, 1)
+
+<hr>
+  fiveInts(0) = fiveToOne(4)
+  fiveInts  // Array(1, 0, 0, 0, 0)
+
+<hr>
+  import scala.collection.mutable.ListBuffer
+
+  val buf = new ListBuffer[Int]
+  buf += 1    // ListBuffer(1)
+  buf += 2    // ListBuffer(1, 2)
+  3 +=: buf   // ListBuffer(3, 1, 2)
+  buf.toList  // List(3, 1, 2)
+
+<hr>
+  import scala.collection.mutable.ArrayBuffer
+
+<hr>
+  val buf = new ArrayBuffer[Int]()
+
+<hr>
+  buf += 12  // ArrayBuffer(12)
+  buf += 15  // ArrayBuffer(12, 15)
+
+<hr>
+  buf.length  // 2
+  buf(0)      // 12
+
+<hr>
+  def hasUpperCase(s: String) = s.exists(_.isUpper)
+  hasUpperCase("Robert Frost")  // true
+  hasUpperCase("e e cummings")  // false
+
+<hr>
+  </pre>
+  <h3><a name="sec2"></a>15.2 Sets and maps</h3>
+
+  <pre><hr>
+  object Predef:
+    type Map[A, +B] = collection.immutable.Map[A, B]
+    type Set[A] = collection.immutable.Set[A]
+    val Map = collection.immutable.Map
+    val Set = collection.immutable.Set
+    // ...
+  end Predef
+
+<hr>
+  import scala.collection.mutable
+
+<hr>
+  val mutaSet = mutable.Set(1, 2, 3)          
+
+<hr>
+  val text = "See Spot run. Run, Spot. Run!"
+  val wordsArray = text.split("[ !,.]+") 
+        // Array(See, Spot, run, Run, Spot, Run)
+
+<hr>
+  val words = mutable.Set.empty[String]
+
+<hr>
+  for word &lt;- wordsArray do
+    words += word.toLowerCase
+  words  // Set(see, run, spot)
+
+<hr>
+  val map = mutable.Map.empty[String, Int]
+
+<hr>
+  val map = mutable.Map.empty[String, Int]
+
+<hr>
+  map("hello") = 1
+  map("there") = 2
+  map  // Map(hello -&gt; 1, there -&gt; 2)
+
+<hr>
+  map("hello")  // 1
+
+<hr>
+  def countWords(text: String) =
+    val counts = mutable.Map.empty[String, Int]
+    for rawWord &lt;- text.split("[ ,!.]+") do
+      val word = rawWord.toLowerCase
+      val oldCount = 
+        if counts.contains(word) then counts(word)
+        else 0
+      counts += (word -&gt; (oldCount + 1))
+    counts
+
+  countWords("See Spot run! Run, Spot. Run!") 
+        // Map(spot -&gt; 2, see -&gt; 1, run -&gt; 3)
+
+<hr>
+  import scala.collection.immutable.TreeSet
+  val ts = TreeSet(9, 3, 1, 8, 0, 2, 7, 4, 6, 5)
+             // TreeSet(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+  val cs = TreeSet('f', 'u', 'n')  // TreeSet(f, n, u)
+
+<hr>
+  import scala.collection.immutable.TreeMap
+  var tm = TreeMap(3 -&gt; 'x', 1 -&gt; 'x', 4 -&gt; 'x')
+             // TreeMap(1 -&gt; x, 3 -&gt; x, 4 -&gt; x)
+  tm += (2 -&gt; 'x')
+  tm  // TreeMap(1 -&gt; x, 2 -&gt; x, 3 -&gt; x, 4 -&gt; x)
+
+<hr>
+  </pre>
+  <h3><a name="sec3"></a>15.3 Selecting mutable versus immutable collections</h3>
+
+  <pre><hr>
+  scala&gt; val people = Set("Nancy", "Jane")
+<span class="output">  val people: Set[String] = Set(Nancy, Jane)</span>
+
+  scala&gt; people += "Bob"
+<span class="output">  1 |people += "Bob"</span>
+<span class="output">    |^^^^^^^^^</span>
+<span class="output">    |value += is not a member of Set[String]</span>
+
+<hr>
+  var people = Set("Nancy", "Jane")
+  people += "Bob"
+  people  // Set(Nancy, Jane, Bob)
+
+<hr>
+  people -= "Jane"
+  people ++= List("Tom", "Harry")
+  people  // Set(Nancy, Bob, Tom, Harry)
+
+<hr>
+// In file <a href="../working-with-other-collections/Capitals.scala">working-with-other-collections/Capitals.scala</a>
+
+  var capital = Map("US" -&gt; "Washington", "France" -&gt; "Paris")
+  capital += ("Japan" -&gt; "Tokyo")
+  println(capital("France")) 
+
+<hr>
+// In file <a href="../working-with-other-collections/Capitals.scala">working-with-other-collections/Capitals.scala</a>
+
+  import scala.collection.mutable.Map  // only change needed!
+  var capital = Map("US" -&gt; "Washington", "France" -&gt; "Paris")
+  capital += ("Japan" -&gt; "Tokyo")
+  println(capital("France")) 
+
+<hr>
+  var roughlyPi = 3.0
+  roughlyPi += 0.1
+  roughlyPi += 0.04
+  roughlyPi  // 3.14
+
+<hr>
+  </pre>
+  <h3><a name="sec4"></a>15.4 Initializing collections</h3>
+
+  <pre><hr>
+  List(1, 2, 3)
+  Set('a', 'b', 'c')
+  import scala.collection.mutable
+  mutable.Map("hi" -&gt; 2, "there" -&gt; 5)
+  Array(1.0, 2.0, 3.0)
+
+<hr>
+  scala&gt; import scala.collection.mutable
+
+  scala&gt; val stuff = mutable.Set(42)
+<span class="output">  val stuff: scala.collection.mutable.Set[Int] = HashSet(42)</span>
+
+  scala&gt; stuff += "abracadabra"                                                                                    
+<span class="output">  1 |stuff += "abracadabra"</span>
+<span class="output">    |         ^^^^^^^^^^^^^</span>
+<span class="output">    |         Found:    ("abracadabra" : String)</span>
+<span class="output">    |         Required: Int</span>
+
+<hr>
+  scala&gt; val stuff = mutable.Set[Any](42)
+<span class="output">  val stuff: scala.collection.mutable.Set[Any] = HashSet(42)</span>
+
+<hr>
+  val colors = List("blue", "yellow", "red", "green")
+
+<hr>
+  scala&gt; import scala.collection.immutable.TreeSet
+
+  scala&gt; val treeSet = TreeSet(colors)                               
+<span class="output">  1 |val treeSet = TreeSet(colors)</span>
+<span class="output">    |                             ^</span>
+<span class="output">    |No implicit Ordering defined for List[String]..</span>
+
+<hr>
+  val treeSet = colors to TreeSet
+        // TreeSet(blue, green, red, yellow)
+
+<hr>
+  treeSet.toList   // List(blue, green, red, yellow)
+
+<hr>
+  treeSet.toArray  // Array(blue, green, red, yellow)
+
+<hr>
+  import scala.collection.mutable
+  treeSet  // TreeSet(blue, green, red, yellow)
+  val mutaSet = treeSet to mutable.Set
+        // mutable.HashSet(red, blue, green, yellow)
+  val immutaSet = mutaSet to Set  // 
+        // Set(red, blue, green, yellow)
+
+<hr>
+  val muta = mutable.Map("i" -&gt; 1, "ii" -&gt; 2)
+  muta  // mutable.HashMap(i -&gt; 1, ii -&gt; 2)
+  val immu = muta to Map  // Map(ii -&gt; 2, i -&gt; 1)
+
+<hr>
+  </pre>
+  <h3><a name="sec5"></a>15.5 Tuples</h3>
+
+  <pre><hr>
+// In file <a href="../working-with-other-collections/Misc.scala">working-with-other-collections/Misc.scala</a>
+
+  (1, "hello", Console)
+
+<hr>
+  def longestWord(words: Array[String]): (String, Int) =
+    var word = words(0)
+    var idx = 0
+    for i &lt;- 1 until words.length do
+      if words(i).length &gt; word.length then
+        word = words(i)
+        idx = i
+    (word, idx)
+
+<hr>
+  val longest = longestWord("The quick brown fox".split(" "))
+  // (quick,1)
+
+<hr>
+  scala&gt; longest(0)
+<span class="output">  val res0: String = quick</span>
+
+  scala&gt; longest(1)
+<span class="output">  val res1: Int = 1</span>
+
+<hr>
+  scala&gt; val (word, idx) = longest
+<span class="output">  val word: String = quick</span>
+<span class="output">  val idx: Int = 1</span>
+
+  scala&gt; word
+<span class="output">  val res55: String = quick</span>
+
+<hr>
+  scala&gt; val word, idx = longest
+<span class="output">  val word: (String, Int) = (quick,1)</span>
+<span class="output">  val idx: (String, Int) = (quick,1)</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec6"></a>15.6 Conclusion</h3>
+
+
+ <table>
+ <tr valign="top">
+ <td>
+ <div id="moreinfo">
+ <p>
+ For more information about <em>Programming in Scala, Fifth Edition</em> (the "Stairway Book"), please visit:
+ </p>
+ 
+ <p>
+ <a href="http://www.artima.com/shop/programming_in_scala_5ed">http://www.artima.com/shop/programming_in_scala_5ed</a>
+ </p>
+ 
+ <p>
+ and:
+ </p>
+ 
+ <p>
+ <a href="http://booksites.artima.com/programming_in_scala_5ed">http://booksites.artima.com/programming_in_scala_5ed</a>
+ </p>
+ </div>
+ </td>
+ <td>
+ <div id="license">
+ <p>
+   Copyright &copy; 2007-2020 Artima, Inc. All rights reserved.
+ </p>
+
+ <p>
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ </p>
+
+ <p style="margin-left: 20px">
+   <a href="http://www.apache.org/licenses/LICENSE-2.0">
+     http://www.apache.org/licenses/LICENSE-2.0
+   </a>
+ </p>
+
+ <p>
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ </p>
+ </div>
+ </td>
+ </tr>
+ </table>
+
+</body>
+</html>

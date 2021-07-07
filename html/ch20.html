@@ -1,0 +1,685 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/2002/REC-xhtml1-20020801/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=ISO-8859-1" />
+  <title>Code Examples for Programming in Scala, Fifth Edition</title>
+  <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body>
+
+<div id="mainTitles"><h3>Code Examples for</h3><h2>Programming in Scala, Fifth Edition</h2></div>  <p><a href="../index.html">
+    Return to chapter index
+  </a></p>
+  <h2>20 Abstract Members</h2>
+
+  <p><a href="../abstract-members/transcript.txt">
+    Sample run of chapter's interpreter examples
+  </a></p>
+
+  <ul>
+
+    <li>20.1 <a href="#sec1">A quick tour of abstract members</a></li>
+    <li>20.2 <a href="#sec2">Type members</a></li>
+    <li>20.3 <a href="#sec3">Abstract <span class="mono">val</span>s</a></li>
+    <li>20.4 <a href="#sec4">Abstract <span class="mono">var</span>s</a></li>
+    <li>20.5 <a href="#sec5">Initializing abstract <span class="mono">val</span>s</a></li>
+    <li>20.6 <a href="#sec6">Abstract <span class="mono">type</span>s</a></li>
+    <li>20.7 <a href="#sec7">Path-dependent types</a></li>
+    <li>20.8 <a href="#sec8">Refinement types</a></li>
+    <li>20.9 <a href="#sec9">Case study: Currencies</a></li>
+    <li>20.10 <a href="#sec10">Abstract versus generic</a></li>
+    <li>20.11 <a href="#sec11">Conclusion</a></li>
+  </ul>
+
+  <h3><a name="sec1"></a>20.1 A quick tour of abstract members</h3>
+
+  <pre><hr>
+// In file <a href="../abstract-members/AbsConc.scala">abstract-members/AbsConc.scala</a>
+
+  trait Abstract:
+    type T
+    def transform(x: T): T
+    val initial: T
+    var current: T
+
+<hr>
+// In file <a href="../abstract-members/AbsConc.scala">abstract-members/AbsConc.scala</a>
+
+  class Concrete extends Abstract:
+    type T = String
+    def transform(x: String) = x + x
+    val initial = "hi"
+    var current = initial
+
+<hr>
+  </pre>
+  <h3><a name="sec2"></a>20.2 Type members</h3>
+
+  <h3><a name="sec3"></a>20.3 Abstract <span class="mono">val</span>s</h3>
+
+  <pre><hr>
+  val initial: String
+
+<hr>
+  val initial = "hi"
+
+<hr>
+  def initial: String
+
+<hr>
+// In file <a href="../abstract-members/DefOverVal.scala.err">abstract-members/DefOverVal.scala.err</a>
+
+  abstract class Fruit:
+    val v: String // `v' for value
+    def m: String // `m' for method
+
+  abstract class Apple extends Fruit:
+    val v: String
+    val m: String // OK to override a `def' with a `val'
+
+  abstract class BadApple extends Fruit:
+    def v: String // ERROR: cannot override a `val' with a `def'
+    def m: String
+
+<hr>
+  </pre>
+  <h3><a name="sec4"></a>20.4 Abstract <span class="mono">var</span>s</h3>
+
+  <pre><hr>
+// In file <a href="../abstract-members/AbstractTime.scala">abstract-members/AbstractTime.scala</a>
+
+  trait AbstractTime:
+    var hour: Int
+    var minute: Int
+
+<hr>
+// In file <a href="../abstract-members/AbstractTime.scala">abstract-members/AbstractTime.scala</a>
+
+  trait AbstractTime:
+    def hour: Int              // getter for `hour'
+    def hour_=(x: Int): Unit   // setter for `hour'
+    def minute: Int            // getter for `minute'
+    def minute_=(x: Int): Unit // setter for `minute'
+
+<hr>
+  </pre>
+  <h3><a name="sec5"></a>20.5 Initializing abstract <span class="mono">val</span>s</h3>
+
+  <pre><hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  trait RationalTrait: 
+    val numerArg: Int 
+    val denomArg: Int 
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  new RationalTrait:
+    val numerArg = 1
+    val denomArg = 2
+
+<hr>
+  new Rational(expr1, expr2)
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  new RationalTrait:
+    val numerArg = expr1
+    val denomArg = expr2
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  trait RationalTrait:
+    val numerArg: Int
+    val denomArg: Int
+    require(denomArg != 0)
+    private val g = gcd(numerArg, denomArg)
+    val numer = numerArg / g
+    val denom = denomArg / g
+    private def gcd(a: Int, b: Int): Int = 
+      if (b == 0) a else gcd(b, a % b)
+    override def toString = s"<em>numer/</em>denom"
+
+<hr>
+  scala&gt; val x = 2
+<span class="output">  val x: Int = 2</span>
+
+  scala&gt; new RationalTrait:
+       |   val numerArg = 1 * x
+       |   val denomArg = 2 * x
+<span class="output">  java.lang.IllegalArgumentException: requirement failed</span>
+<span class="output">    at scala.Predef$.require(Predef.scala:280)</span>
+<span class="output">    at RationalTrait.$init$(&lt;console&gt;:4)</span>
+<span class="output">    ... 28 elided</span>
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  trait RationalTrait(val numerArg: Int, val denomArg: Int):
+    require(denomArg != 0)
+    private val g = gcd(numerArg, denomArg)
+    val numer = numerArg / g
+    val denom = denomArg / g
+    private def gcd(a: Int, b: Int): Int =
+      if (b == 0) a else gcd(b, a % b)
+    override def toString = s"<em>numer/</em>denom"
+
+<hr>
+  scala&gt; new RationalTrait(1 * x, 2 * x) {}
+<span class="output">  val res1: RationalTrait = 1/2</span>
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  object TwoThirds extends RationalTrait(2, 3)
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  class RationalClass(n: Int, d: Int) extends RationalTrait(n, d):
+    def + (that: RationalClass) = new RationalClass(
+      numer * that.denom + that.numer * denom,
+      denom * that.denom
+    )
+
+<hr>
+  object Demo:
+    val x = { println("initializing x"); "done" }
+
+<hr>
+  scala&gt; Demo
+<span class="output">  initializing x</span>
+<span class="output">  val res0: Demo.type = Demo$@3002e397</span>
+
+  scala&gt; Demo.x
+<span class="output">  val res1: String = done</span>
+
+<hr>
+  object Demo:
+    lazy val x = { println("initializing x"); "done" }
+
+  scala&gt; Demo
+<span class="output">  val res2: Demo.type = Demo$@24e5389c</span>
+
+  scala&gt; Demo.x
+<span class="output">  initializing x</span>
+<span class="output">  val res3: String = done</span>
+
+<hr>
+  trait LazyRationalTrait:
+
+    val numerArg: Int 
+    val denomArg: Int 
+
+    lazy val numer = numerArg / g
+    lazy val denom = denomArg / g
+
+    override def toString = s"<em>numer/</em>denom"
+
+    private lazy val g =
+      require(denomArg != 0)
+      gcd(numerArg, denomArg)
+
+    private def gcd(a: Int, b: Int): Int = 
+      if b == 0 then a else gcd(b, a % b)
+
+<hr>
+  scala&gt; val x = 2
+<span class="output">  val x: Int = 2</span>
+
+
+  scala&gt; new LazyRationalTrait:
+        |   val numerArg = 1 * x
+        |   val denomArg = 2 * x
+        |
+<span class="output">  val res4: LazyRationalTrait = 1/2</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec6"></a>20.6 Abstract <span class="mono">type</span>s</h3>
+
+  <pre><hr>
+// In file <a href="../abstract-members/BuggyAnimals.scala.err">abstract-members/BuggyAnimals.scala.err</a>
+
+  class Food
+  abstract class Animal:
+    def eat(food: Food): Unit
+
+<hr>
+// In file <a href="../abstract-members/BuggyAnimals.scala.err">abstract-members/BuggyAnimals.scala.err</a>
+
+  class Grass extends Food
+  class Cow extends Animal:
+    override def eat(food: Grass) = {} // This won't compile
+
+<hr>
+2 |  class Cow extends Animal:
+  |        ^
+  |class Cow needs to be abstract, since
+  |def eat(food: Food): Unit is not defined (Note that Food
+  |does not match Grass: class Grass is a subclass of class
+  |Food, but method parameter types must match exactly.)
+3 |    override def eat(food: Grass) = {} // This won't...
+  |                 ^
+  |      method eat has a different signature than the
+  |      overridden declaration
+
+<hr>
+  class Food
+  abstract class Animal:
+    def eat(food: Food): Unit
+
+  class Grass extends Food
+  class Cow extends Animal
+    override def eat(food: Grass) = {} // This won't compile,
+                                       // but if it did,...
+  class Fish extends Food
+  val bessy: Animal = new Cow
+  bessy.eat(new Fish)      // ...you could feed fish to cows.
+
+<hr>
+// In file <a href="../abstract-members/Animals.scala">abstract-members/Animals.scala</a>
+
+  class Food
+  abstract class Animal:
+    type SuitableFood &lt;: Food
+    def eat(food: SuitableFood): Unit
+
+<hr>
+// In file <a href="../abstract-members/Animals.scala">abstract-members/Animals.scala</a>
+
+  class Grass extends Food
+  class Cow extends Animal:
+    type SuitableFood = Grass
+    override def eat(food: Grass) = {}
+
+<hr>
+  class Fish extends Food
+  val bessy: Animal = new Cow
+
+  scala&gt; bessy.eat(new Fish)
+<span class="output">  1 |bessy.eat(new Fish)</span>
+<span class="output">    |          ^^^^^^^^</span>
+<span class="output">    |          Found:    Fish</span>
+<span class="output">    |          Required: bessy.SuitableFood</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec7"></a>20.7 Path-dependent types</h3>
+
+  <pre><hr>
+  class DogFood extends Food
+  class Dog extends Animal:
+    type SuitableFood = DogFood
+    override def eat(food: DogFood) = {}
+
+<hr>
+  val bessy = new Cow
+  val lassie = new Dog
+
+  scala&gt; lassie.eat(new bessy.SuitableFood)
+<span class="output">  1 |lassie.eat(new bessy.SuitableFood)</span>
+<span class="output">    |           ^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="output">    |           Found:    Grass</span>
+<span class="output">    |           Required: DogFood</span>
+
+<hr>
+  val bootsie = new Dog
+  lassie.eat(new bootsie.SuitableFood)
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  class Outer:
+    class Inner
+
+<hr>
+  val o1 = new Outer
+  val o2 = new Outer
+
+<hr>
+  new o1.Inner
+
+<hr>
+  scala&gt; new Outer#Inner
+<span class="output">  1 |new Outer#Inner</span>
+<span class="output">    |    ^^^^^^^^^^^</span>
+<span class="output">    |    Outer is not a valid class prefix, since it is</span>
+<span class="output">    |    not an immutable path</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec8"></a>20.8 Refinement types</h3>
+
+  <pre><hr>
+  Animal { type SuitableFood = Grass }
+
+<hr>
+// In file <a href="../abstract-members/Animals.scala">abstract-members/Animals.scala</a>
+
+  class Pasture:
+    var animals: List[Animal { type SuitableFood = Grass }] = Nil
+    // ...
+
+<hr>
+  </pre>
+  <h3><a name="sec9"></a>20.9 Case study: Currencies</h3>
+
+  <pre><hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  // A first (faulty) design of the Currency class
+  abstract class Currency:
+    val amount: Long
+    def designation: String 
+    override def toString = s"<em>amount </em>designation"
+    def + (that: Currency): Currency = ...
+    def * (x: Double): Currency = ...
+
+<hr>
+  79 USD
+  11000 Yen
+  99 Euro 
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  new Currency:
+    val amount = 79L
+    def designation = "USD"
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  abstract class Dollar extends Currency:
+    def designation = "USD"
+
+  abstract class Euro extends Currency:
+    def designation = "Euro"
+
+<hr>
+// In file <a href="../abstract-members/AbstractCurrency.scala.err">abstract-members/AbstractCurrency.scala.err</a>
+
+  // A second (still imperfect) design of the Currency class
+  abstract class AbstractCurrency:
+    type Currency &lt;: AbstractCurrency
+    val amount: Long
+    def designation: String 
+    override def toString = s"<em>amount </em>designation"
+    def + (that: Currency): Currency = ...
+    def * (x: Double): Currency = ...
+
+<hr>
+  abstract class Dollar extends AbstractCurrency:
+    type Currency = Dollar
+    def designation = "USD"
+
+<hr>
+// In file <a href="../abstract-members/AbstractCurrency.scala.err">abstract-members/AbstractCurrency.scala.err</a>
+
+  def + (that: Currency): Currency =
+    new Currency:
+      val amount = this.amount + that.amount
+
+<hr>
+7 |    new Currency:
+  |        ^^^^^^^^
+  |        AbstractCurrency.this.Currency is not a class type
+8 |      val amount = this.amount + that.amount
+  |                   ^
+  |                   Recursive value amount needs type
+
+<hr>
+  abstract class AbstractCurrency:
+    type Currency &lt;: AbstractCurrency // abstract type
+    def make(amount: Long): Currency  // factory method
+    ...                               // rest of class
+
+<hr>
+  myDollar.make(100)  // here are a hundred more!
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  abstract class CurrencyZone:
+    type Currency &lt;: AbstractCurrency
+    def make(x: Long): Currency
+    abstract class AbstractCurrency:
+      val amount: Long
+      def designation: String 
+      override def toString = s"<em>amount </em>designation"
+      def + (that: Currency): Currency = 
+        make(this.amount + that.amount)
+      def * (x: Double): Currency = 
+        make((this.amount * x).toLong)
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  object US extends CurrencyZone:
+    abstract class Dollar extends AbstractCurrency:
+      def designation = "USD"
+
+    type Currency = Dollar
+    def make(x: Long) = new Dollar { val amount = x }
+
+<hr>
+  abstract class CurrencyZone:
+    ... 
+    val CurrencyUnit: Currency 
+
+<hr>
+// In file <a href="../abstract-members/CurrencyZone.scala">abstract-members/CurrencyZone.scala</a>
+
+  override def toString = 
+    ((amount.toDouble / CurrencyUnit.amount.toDouble)
+      .formatted(s"%.${decimals(CurrencyUnit.amount)}f")
+      + " " + designation)
+
+<hr>
+// In file <a href="../abstract-members/CurrencyZone.scala">abstract-members/CurrencyZone.scala</a>
+
+  object US extends CurrencyZone:
+    abstract class Dollar extends AbstractCurrency:
+      def designation = "USD"
+    type Currency = Dollar
+    def make(cents: Long) =
+      new Dollar:
+        val amount = cents
+    val Cent = make(1)
+    val Dollar = make(100)
+    val CurrencyUnit = Dollar
+
+<hr>
+// In file <a href="../abstract-members/CurrencyZone.scala">abstract-members/CurrencyZone.scala</a>
+
+  private def decimals(n: Long): Int = 
+    if n == 1 then 0 else 1 + decimals(n / 10)
+
+<hr>
+// In file <a href="../abstract-members/CurrencyZone.scala">abstract-members/CurrencyZone.scala</a>
+
+  def from(other: CurrencyZone#AbstractCurrency): Currency = 
+    make(math.round(
+      other.amount.toDouble * Converter.exchangeRate
+        (other.designation)(this.designation)))
+
+<hr>
+// In file <a href="../abstract-members/CurrencyZone.scala">abstract-members/CurrencyZone.scala</a>
+
+  object Europe extends CurrencyZone:
+    abstract class Euro extends AbstractCurrency:
+      def designation = "EUR"
+
+    type Currency = Euro
+    def make(cents: Long) =
+      new Euro:
+        val amount = cents
+
+    val Cent = make(1)
+    val Euro = make(100)
+    val CurrencyUnit = Euro
+
+  object Japan extends CurrencyZone:
+    abstract class Yen extends AbstractCurrency:
+      def designation = "JPY"
+
+    type Currency = Yen
+    def make(yen: Long) =
+      new Yen:
+        val amount = yen
+
+    val Yen = make(1)
+    val CurrencyUnit = Yen
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  object Converter:
+    var exchangeRate =
+      Map(
+        "USD" -&gt; Map("USD" -&gt; 1.0, "EUR" -&gt; 0.8498,
+                   "JPY" -&gt; 1.047, "CHF" -&gt; 0.9149),
+        "EUR" -&gt; Map("USD" -&gt; 1.177, "EUR" -&gt; 1.0,
+                   "JPY" -&gt; 1.232, "CHF" -&gt; 1.0765),
+        "JPY" -&gt; Map("USD" -&gt; 0.9554, "EUR" -&gt; 0.8121,
+                   "JPY" -&gt; 1.0, "CHF" -&gt; 0.8742),
+        "CHF" -&gt; Map("USD" -&gt; 1.093, "EUR" -&gt; 0.9289,
+                   "JPY" -&gt; 1.144, "CHF" -&gt; 1.0)
+      )
+
+<hr>
+// In file <a href="../abstract-members/Misc.scala">abstract-members/Misc.scala</a>
+
+  abstract class CurrencyZone:
+
+    type Currency &lt;: AbstractCurrency
+    def make(x: Long): Currency
+
+    abstract class AbstractCurrency:
+
+      val amount: Long
+      def designation: String 
+
+      def + (that: Currency): Currency = 
+        make(this.amount + that.amount)
+      def * (x: Double): Currency = 
+        make((this.amount * x).toLong)
+      def - (that: Currency): Currency = 
+        make(this.amount - that.amount)
+      def / (that: Double) = 
+        make((this.amount / that).toLong)
+      def / (that: Currency) = 
+        this.amount.toDouble / that.amount
+
+      def from(other: CurrencyZone#AbstractCurrency): Currency = 
+        make(math.round(
+          other.amount.toDouble * Converter.exchangeRate
+            (other.designation)(this.designation)))
+
+      private def decimals(n: Long): Int = 
+        if (n == 1) 0 else 1 + decimals(n / 10)
+
+      override def toString = 
+        ((amount.toDouble / CurrencyUnit.amount.toDouble)
+          .formatted(s"%.${decimals(CurrencyUnit.amount)}f")
+          + " " + designation)
+
+    end AbstractCurrency
+
+    val CurrencyUnit: Currency
+
+  end CurrencyZone
+
+<hr>
+  scala&gt; val yen = Japan.Yen.from(US.Dollar * 100)
+<span class="output">  val yen: Japan.Currency = 10470 JPY</span>
+
+  scala&gt; val euros = Europe.Euro.from(yen)
+<span class="output">  val euros: Europe.Currency = 85.03 EUR</span>
+
+  scala&gt; val dollars = US.Dollar.from(euros)
+<span class="output">  val dollars: US.Currency = 100.08 USD</span>
+
+<hr>
+  scala&gt; US.Dollar * 100 + dollars
+<span class="output">  res3: US.Currency = 200.08 USD</span>
+
+<hr>
+  scala&gt; US.Dollar + Europe.Euro
+<span class="output">  1 |US.Dollar + Europe.Euro</span>
+<span class="output">    |            ^^^^^^^^^^^</span>
+<span class="output">    |Found:    (Europe.Euro : Europe.Currency)</span>
+<span class="output">    |Required: US.Currency(2)</span>
+<span class="output">    |where:    Currency  is a type in object Europe which</span>
+<span class="output">    |          is an alias of Europe.Euro</span>
+<span class="output">    |          Currency(2) is a type in object US which is</span>
+<span class="output">    |          an alias of US.Dollar</span>
+
+<hr>
+  </pre>
+  <h3><a name="sec10"></a>20.10 Abstract versus generic</h3>
+
+  <h3><a name="sec11"></a>20.11 Conclusion</h3>
+
+
+ <table>
+ <tr valign="top">
+ <td>
+ <div id="moreinfo">
+ <p>
+ For more information about <em>Programming in Scala, Fifth Edition</em> (the "Stairway Book"), please visit:
+ </p>
+ 
+ <p>
+ <a href="http://www.artima.com/shop/programming_in_scala_5ed">http://www.artima.com/shop/programming_in_scala_5ed</a>
+ </p>
+ 
+ <p>
+ and:
+ </p>
+ 
+ <p>
+ <a href="http://booksites.artima.com/programming_in_scala_5ed">http://booksites.artima.com/programming_in_scala_5ed</a>
+ </p>
+ </div>
+ </td>
+ <td>
+ <div id="license">
+ <p>
+   Copyright &copy; 2007-2020 Artima, Inc. All rights reserved.
+ </p>
+
+ <p>
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ </p>
+
+ <p style="margin-left: 20px">
+   <a href="http://www.apache.org/licenses/LICENSE-2.0">
+     http://www.apache.org/licenses/LICENSE-2.0
+   </a>
+ </p>
+
+ <p>
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ </p>
+ </div>
+ </td>
+ </tr>
+ </table>
+
+</body>
+</html>
